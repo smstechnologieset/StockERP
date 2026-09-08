@@ -1,11 +1,10 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  // High-performance compilation settings
   experimental: {
-    optimizePackageImports: ["lucide-react", "recharts", "@tanstack/react-table"],
+    // Only optimize lucide-react; @tanstack/react-table uses ESM loaders that conflict with Next.js barrel optimization
+    optimizePackageImports: ["lucide-react"],
   },
-  // Disable x-powered-by header for security and micro-optimization
   poweredByHeader: false,
 };
 
