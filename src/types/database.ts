@@ -4,6 +4,8 @@ export type MovementType = "purchase" | "sale" | "adjustment_in" | "adjustment_o
 
 export type PaymentMethod = "cash" | "telebirr" | "cbe_birr" | "bank_transfer" | "credit";
 
+export type CreditStatus = "unpaid" | "partially_paid" | "paid";
+
 export interface Branch {
   id: string;
   name: string;
@@ -173,4 +175,36 @@ export interface StockAdjustment {
   created_at: string;
   product?: Product;
   unit?: Unit;
+}
+
+export interface CreditPayment {
+  id: string;
+  credit_id: string;
+  amount: number;
+  payment_method: PaymentMethod;
+  payment_date: string;
+  reference_note: string | null;
+  recorded_by: string | null;
+  created_at: string;
+}
+
+export interface CustomerCredit {
+  id: string;
+  branch_id: string;
+  sale_id: string | null;
+  customer_name: string;
+  customer_phone: string | null;
+  total_sale_amount: number;
+  down_payment_at_sale: number;
+  total_credit_amount: number;
+  paid_amount: number;
+  remaining_balance: number;
+  due_date: string | null;
+  status: CreditStatus;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+  // Relations
+  sale?: Sale;
+  payments?: CreditPayment[];
 }

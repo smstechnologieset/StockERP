@@ -9,15 +9,29 @@ export default async function ReportsPage() {
   let topSelling: any[] = [];
   let supplierBreakdown: any[] = [];
   let lowStockItems: any[] = [];
+  let creditOutstanding = 38900.0;
+  let creditCollected = 14800.0;
 
   try {
     const supabase = createClient();
 
-    const [stockRes, salesRes, purchasesRes] = await Promise.all([
+    const [stockRes, salesRes, purchasesRes, creditsRes] = await Promise.all([
       supabase.from("view_product_current_stock").select("*"),
       supabase.from("sales").select("*, items:sale_items(*, product:products(name))"),
       supabase.from("purchases").select("*, supplier:suppliers(name)"),
+      supabase.from("customer_credits").select("remaining_balance, paid_amount"),
     ]);
+
+    if (creditsRes.data && creditsRes.data.length > 0) {
+      creditOutstanding = creditsRes.data.reduce(
+        (sum, c) => sum + (Number(c.remaining_balance) || 0),
+        0
+      );
+      creditCollected = creditsRes.data.reduce(
+        (sum, c) => sum + (Number(c.paid_amount) || 0),
+        0
+      );
+    }
 
     // 1. Process Stock Valuation by Category
     if (stockRes.data && stockRes.data.length > 0) {
@@ -126,6 +140,8 @@ export default async function ReportsPage() {
       topSelling={topSelling}
       supplierBreakdown={supplierBreakdown}
       lowStockItems={lowStockItems}
+      creditOutstanding={creditOutstanding}
+      creditCollected={creditCollected}
     />
   );
 }

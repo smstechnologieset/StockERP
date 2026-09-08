@@ -19,6 +19,10 @@ export interface CreateSaleInput {
   notes?: string;
   manual_override?: boolean;
   override_reason?: string;
+  down_payment_at_sale?: number;
+  down_payment_method?: "cash" | "telebirr" | "cbe_birr" | "bank_transfer";
+  credit_due_date?: string;
+  credit_notes?: string;
   items: SaleItemInput[];
 }
 
@@ -152,16 +156,69 @@ export async function createSaleAction(input: CreateSaleInput) {
       throw new Error(`Failed to record stock ledger movements: ${ledgerError.message}`);
     }
 
+    // 7. If Payment Method is "Credit", create customer credit account and down payment
+    let creditId: string | null = null;
+    if (input.payment_method === "credit") {
+      const downPayment = Math.min(
+        totalAmount,
+        Math.max(0, Number(input.down_payment_at_sale || 0))
+      );
+      const remainingBalance = Number((totalAmount - downPayment).toFixed(2));
+      const creditStatus = remainingBalance <= 0 ? "paid" : downPayment > 0 ? "partially_paid" : "unpaid";
+
+      try {
+        const { data: creditRecord, error: creditErr } = await supabase
+          .from("customer_credits")
+          .insert({
+            branch_id: branchId,
+            sale_id: sale.id,
+            customer_name: input.customer_name || "Credit Customer",
+            customer_phone: input.customer_phone || null,
+            total_sale_amount: totalAmount,
+            down_payment_at_sale: downPayment,
+            total_credit_amount: totalAmount,
+            paid_amount: downPayment,
+            remaining_balance: remainingBalance,
+            due_date: input.credit_due_date || null,
+            status: creditStatus,
+            notes: input.credit_notes || null,
+          })
+          .select()
+          .single();
+
+        if (!creditErr && creditRecord) {
+          creditId = creditRecord.id;
+
+          // If a partial down payment was made at sale time, record it in credit_payments
+          if (downPayment > 0) {
+            await supabase.from("credit_payments").insert({
+              credit_id: creditRecord.id,
+              amount: downPayment,
+              payment_method: input.down_payment_method || "cash",
+              reference_note: `Down payment at sale POS (Invoice ${invoiceNumber})`,
+              recorded_by: recordedBy,
+            });
+          }
+        } else if (creditErr) {
+          console.warn("Credit record creation warning:", creditErr.message);
+        }
+      } catch (cErr) {
+        console.warn("Credit recording non-fatal exception:", cErr);
+      }
+    }
+
     revalidatePath("/staff");
     revalidatePath("/manager");
     revalidatePath("/inventory");
     revalidatePath("/sales");
+    revalidatePath("/credit");
 
     return {
       success: true,
       saleId: sale.id,
       invoiceNumber: invoiceNumber,
       totalAmount: totalAmount,
+      creditId: creditId,
     };
   } catch (error: any) {
     console.error("Sale creation error:", error);

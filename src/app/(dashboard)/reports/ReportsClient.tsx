@@ -30,12 +30,17 @@ import { Button } from "@/components/ui/button";
 import { formatETB, formatQuantity } from "@/lib/utils";
 import Link from "next/link";
 
+import { useLanguage } from "@/lib/i18n/LanguageContext";
+import { CreditCard } from "lucide-react";
+
 interface ReportsClientProps {
   revenueDaily: { date: string; revenue: number; orders: number }[];
   categoryValuation: { name: string; value: number; color: string }[];
   topSelling: { name: string; soldGrams: number; soldDisplay: string; revenue: number }[];
   supplierBreakdown: { name: string; totalCost: number; shipments: number }[];
   lowStockItems: any[];
+  creditOutstanding?: number;
+  creditCollected?: number;
 }
 
 export function ReportsClient({
@@ -44,7 +49,10 @@ export function ReportsClient({
   topSelling,
   supplierBreakdown,
   lowStockItems,
+  creditOutstanding = 0,
+  creditCollected = 0,
 }: ReportsClientProps) {
+  const { t, isAmharic } = useLanguage();
   const [timeRange, setTimeRange] = useState<"day" | "week" | "month">("week");
 
   const totalRevenue = revenueDaily.reduce((acc, curr) => acc + curr.revenue, 0);
@@ -93,7 +101,7 @@ export function ReportsClient({
       </div>
 
       {/* KPI Cards Strip */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
         <Card className="border">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
@@ -151,6 +159,27 @@ export function ReportsClient({
               {lowStockItems.length} Products
             </div>
             <p className="text-xs text-muted-foreground mt-1">Action required by manager</p>
+          </CardContent>
+        </Card>
+
+        {/* Credit Outstanding */}
+        <Card className="border-amber-600/30 bg-amber-50/10 dark:bg-amber-950/10">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              {t("credit_total_outstanding")}
+            </CardTitle>
+            <CreditCard className="h-4 w-4 text-amber-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-amber-800 dark:text-amber-300">
+              {formatETB(creditOutstanding)}
+            </div>
+            <div className="mt-1 flex items-center justify-between">
+              <span className="text-xs text-muted-foreground">Collected: {formatETB(creditCollected)}</span>
+              <Link href="/credit" className="text-xs font-semibold text-amber-600 hover:underline">
+                Manage &rarr;
+              </Link>
+            </div>
           </CardContent>
         </Card>
       </div>

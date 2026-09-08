@@ -440,3 +440,54 @@ CREATE TRIGGER trg_check_negative_stock
     BEFORE INSERT ON public.stock_movements
     FOR EACH ROW
     EXECUTE FUNCTION public.enforce_negative_stock_protection();
+
+-- -----------------------------------------------------------------------------
+-- 14. CUSTOMER CREDIT & INSTALLMENT MANAGEMENT
+-- -----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS public.customer_credits (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    branch_id UUID NOT NULL DEFAULT '00000000-0000-0000-0000-000000000001' REFERENCES public.branches(id),
+    sale_id UUID REFERENCES public.sales(id) ON DELETE CASCADE,
+    customer_name TEXT NOT NULL,
+    customer_phone TEXT,
+    total_sale_amount NUMERIC(15, 2) NOT NULL CHECK (total_sale_amount >= 0),
+    down_payment_at_sale NUMERIC(15, 2) NOT NULL DEFAULT 0.00 CHECK (down_payment_at_sale >= 0),
+    total_credit_amount NUMERIC(15, 2) NOT NULL CHECK (total_credit_amount >= 0),
+    paid_amount NUMERIC(15, 2) NOT NULL DEFAULT 0.00 CHECK (paid_amount >= 0),
+    remaining_balance NUMERIC(15, 2) NOT NULL CHECK (remaining_balance >= 0),
+    due_date DATE,
+    status TEXT NOT NULL DEFAULT 'unpaid' CHECK (status IN ('unpaid', 'partially_paid', 'paid')),
+    notes TEXT,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS public.credit_payments (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    credit_id UUID NOT NULL REFERENCES public.customer_credits(id) ON DELETE CASCADE,
+    amount NUMERIC(15, 2) NOT NULL CHECK (amount > 0),
+    payment_method TEXT NOT NULL DEFAULT 'cash' CHECK (payment_method IN ('cash', 'telebirr', 'cbe_birr', 'bank_transfer')),
+    payment_date TIMESTAMPTZ NOT NULL DEFAULT now(),
+    reference_note TEXT,
+    recorded_by UUID REFERENCES public.profiles(id),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+ALTER TABLE public.customer_credits ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.credit_payments ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Allow authenticated to view customer credits" ON public.customer_credits;
+CREATE POLICY "Allow authenticated to view customer credits" ON public.customer_credits FOR SELECT TO authenticated USING (true);
+
+DROP POLICY IF EXISTS "Allow authenticated to insert customer credits" ON public.customer_credits;
+CREATE POLICY "Allow authenticated to insert customer credits" ON public.customer_credits FOR INSERT TO authenticated WITH CHECK (auth.uid() IS NOT NULL);
+
+DROP POLICY IF EXISTS "Allow authenticated to update customer credits" ON public.customer_credits;
+CREATE POLICY "Allow authenticated to update customer credits" ON public.customer_credits FOR UPDATE TO authenticated USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Allow authenticated to view credit payments" ON public.credit_payments;
+CREATE POLICY "Allow authenticated to view credit payments" ON public.credit_payments FOR SELECT TO authenticated USING (true);
+
+DROP POLICY IF EXISTS "Allow authenticated to insert credit payments" ON public.credit_payments;
+CREATE POLICY "Allow authenticated to insert credit payments" ON public.credit_payments FOR INSERT TO authenticated WITH CHECK (auth.uid() IS NOT NULL);
+

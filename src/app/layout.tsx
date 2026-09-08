@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter, Outfit } from "next/font/google";
 import { Suspense } from "react";
 import { ProgressBar } from "@/components/navigation/ProgressBar";
+import { LanguageProvider } from "@/lib/i18n/LanguageContext";
 import "./globals.css";
 
 const inter = Inter({
@@ -29,10 +30,12 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${inter.variable} ${outfit.variable}`}>
       <body className="min-h-screen bg-background font-sans antialiased">
-        <Suspense fallback={null}>
-          <ProgressBar />
-        </Suspense>
-        {children}
+        <LanguageProvider>
+          <Suspense fallback={null}>
+            <ProgressBar />
+          </Suspense>
+          {children}
+        </LanguageProvider>
       </body>
     </html>
   );

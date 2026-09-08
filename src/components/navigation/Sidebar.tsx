@@ -15,11 +15,16 @@ import {
   LogOut,
   ShieldCheck,
   UserCheck,
+  CreditCard,
+  ArrowLeftRight,
+  Tag,
+  UserCog,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
 
 interface SidebarProps {
   userRole?: "owner_manager" | "staff";
@@ -37,25 +42,31 @@ export function Sidebar({
   const pathname = usePathname();
   const router = useRouter();
   const supabase = createClient();
+  const { t, isAmharic } = useLanguage();
 
   const isManager = userRole === "owner_manager";
 
   const staffNavItems = [
-    { name: "Staff Dashboard", href: "/staff", icon: LayoutDashboard },
-    { name: "Record Sale (POS)", href: "/sales/new", icon: ShoppingCart },
-    { name: "Receive Stock", href: "/purchases/new", icon: PackagePlus },
-    { name: "Current Stock", href: "/inventory", icon: Boxes },
+    { name: t("nav_staff_dashboard"), href: "/staff", icon: LayoutDashboard },
+    { name: t("nav_pos"), href: "/sales/new", icon: ShoppingCart },
+    { name: t("nav_receive_stock"), href: "/purchases/new", icon: PackagePlus },
+    { name: t("nav_inventory"), href: "/inventory", icon: Boxes },
+    { name: t("nav_credit"), href: "/credit", icon: CreditCard },
   ];
 
   const managerNavItems = [
-    { name: "Manager Dashboard", href: "/manager", icon: LayoutDashboard },
-    { name: "Point of Sale", href: "/sales/new", icon: ShoppingCart },
-    { name: "Receive Stock", href: "/purchases/new", icon: PackagePlus },
-    { name: "Inventory Ledger", href: "/inventory", icon: Boxes },
-    { name: "Products & Pricing", href: "/products", icon: Wheat },
-    { name: "Suppliers", href: "/suppliers", icon: Users },
-    { name: "Units & Conversion", href: "/units", icon: Scale },
-    { name: "Reports & Valuation", href: "/reports", icon: BarChart3 },
+    { name: t("nav_manager_dashboard"), href: "/manager", icon: LayoutDashboard },
+    { name: t("nav_point_of_sale"), href: "/sales/new", icon: ShoppingCart },
+    { name: t("nav_receive_stock"), href: "/purchases/new", icon: PackagePlus },
+    { name: t("nav_inventory_ledger"), href: "/inventory", icon: Boxes },
+    { name: t("nav_inbound_outbound"), href: "/inventory/movements", icon: ArrowLeftRight },
+    { name: t("nav_credit"), href: "/credit", icon: CreditCard },
+    { name: t("nav_products"), href: "/products", icon: Wheat },
+    { name: t("nav_pricing"), href: "/products/pricing", icon: Tag },
+    { name: t("nav_suppliers"), href: "/suppliers", icon: Users },
+    { name: t("nav_units"), href: "/units", icon: Scale },
+    { name: t("nav_reports"), href: "/reports", icon: BarChart3 },
+    { name: t("nav_users"), href: "/users", icon: UserCog },
   ];
 
   const navItems = isManager ? managerNavItems : staffNavItems;
@@ -74,10 +85,10 @@ export function Sidebar({
           <Wheat className="h-5 w-5" />
         </div>
         <div>
-          <h1 className="font-heading font-bold tracking-tight text-foreground text-base">
-            Grain & Powder
+          <h1 className="font-heading font-bold tracking-tight text-foreground text-sm">
+            {t("app_title")}
           </h1>
-          <p className="text-xs text-muted-foreground font-medium">Addis Trading ERP</p>
+          <p className="text-[11px] text-muted-foreground font-medium">{t("app_subtitle")}</p>
         </div>
       </div>
 
@@ -86,7 +97,7 @@ export function Sidebar({
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
             <Building2 className="h-3.5 w-3.5 text-amber-600" />
-            <span className="font-medium text-foreground">{branchName}</span>
+            <span className="font-medium text-foreground">{branchName === "Main Branch" ? t("main_branch") : branchName}</span>
           </div>
           <Badge
             variant={isManager ? "warning" : "info"}
@@ -94,11 +105,11 @@ export function Sidebar({
           >
             {isManager ? (
               <span className="flex items-center gap-1">
-                <ShieldCheck className="h-3 w-3" /> Owner / Manager
+                <ShieldCheck className="h-3 w-3" /> {t("owner_manager")}
               </span>
             ) : (
               <span className="flex items-center gap-1">
-                <UserCheck className="h-3 w-3" /> Staff
+                <UserCheck className="h-3 w-3" /> {t("staff")}
               </span>
             )}
           </Badge>
@@ -108,7 +119,7 @@ export function Sidebar({
       {/* Navigation Links */}
       <div className="flex-1 overflow-y-auto px-3 py-4 space-y-1">
         <div className="px-3 pb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70">
-          Navigation
+          {t("nav_navigation")}
         </div>
         {navItems.map((item) => {
           const isActive = pathname === item.href;

@@ -29,6 +29,8 @@ import { formatETB, formatQuantity } from "@/lib/utils";
 import { createSaleAction } from "@/app/actions/sales";
 import type { Product, Unit, ProductCurrentStockView } from "@/types/database";
 
+import { useLanguage } from "@/lib/i18n/LanguageContext";
+
 interface CartItem {
   productId: string;
   productName: string;
@@ -46,6 +48,7 @@ interface POSRegisterProps {
 
 export function POSRegister({ products, units, stockView }: POSRegisterProps) {
   const router = useRouter();
+  const { t, isAmharic } = useLanguage();
 
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
@@ -55,6 +58,16 @@ export function POSRegister({ products, units, stockView }: POSRegisterProps) {
   const [paymentMethod, setPaymentMethod] = useState<
     "cash" | "telebirr" | "cbe_birr" | "bank_transfer" | "credit"
   >("cash");
+  const [downPayment, setDownPayment] = useState<number>(0);
+  const [downPaymentMethod, setDownPaymentMethod] = useState<
+    "cash" | "telebirr" | "cbe_birr" | "bank_transfer"
+  >("cash");
+  const [dueDate, setDueDate] = useState<string>(() => {
+    const d = new Date();
+    d.setDate(d.getDate() + 30);
+    return d.toISOString().split("T")[0];
+  });
+  const [creditNotes, setCreditNotes] = useState("");
   const [manualOverride, setManualOverride] = useState(false);
   const [overrideReason, setOverrideReason] = useState("");
   const [loading, setLoading] = useState(false);
@@ -62,6 +75,8 @@ export function POSRegister({ products, units, stockView }: POSRegisterProps) {
   const [saleResult, setSaleResult] = useState<{
     invoiceNumber: string;
     totalAmount: number;
+    creditRemaining?: number;
+    isCredit?: boolean;
   } | null>(null);
 
   // Map product id to current stock grams
@@ -177,6 +192,13 @@ export function POSRegister({ products, units, stockView }: POSRegisterProps) {
       return;
     }
 
+    if (paymentMethod === "credit") {
+      if (!customerName || customerName.trim() === "" || customerName.trim().toLowerCase() === "walk-in customer") {
+        setErrorMessage("A specific Customer Full Name is required for Credit sales.");
+        return;
+      }
+    }
+
     setLoading(true);
     setErrorMessage(null);
 
@@ -186,6 +208,10 @@ export function POSRegister({ products, units, stockView }: POSRegisterProps) {
       payment_method: paymentMethod,
       manual_override: manualOverride,
       override_reason: manualOverride ? overrideReason : undefined,
+      down_payment_at_sale: paymentMethod === "credit" ? downPayment : undefined,
+      down_payment_method: paymentMethod === "credit" && downPayment > 0 ? downPaymentMethod : undefined,
+      credit_due_date: paymentMethod === "credit" ? dueDate : undefined,
+      credit_notes: paymentMethod === "credit" ? creditNotes : undefined,
       items: cart.map((item) => {
         const u = units.find((x) => x.id === item.unitId);
         return {
@@ -204,8 +230,12 @@ export function POSRegister({ products, units, stockView }: POSRegisterProps) {
       setSaleResult({
         invoiceNumber: res.invoiceNumber || "INV-NEW",
         totalAmount: res.totalAmount || cartTotal,
+        creditRemaining: paymentMethod === "credit" ? Math.max(0, cartTotal - downPayment) : undefined,
+        isCredit: paymentMethod === "credit",
       });
       setCart([]);
+      setDownPayment(0);
+      setCreditNotes("");
     } else {
       setErrorMessage(res.error || "Failed to complete sale.");
     }
@@ -246,13 +276,19 @@ export function POSRegister({ products, units, stockView }: POSRegisterProps) {
               </div>
               <div>
                 <h3 className="font-heading font-bold text-lg text-emerald-950 dark:text-emerald-200">
-                  Sale Completed! Invoice #{saleResult.invoiceNumber}
+                  {saleResult.isCredit ? "Credit Sale Recorded!" : "Sale Completed!"} Invoice #{saleResult.invoiceNumber}
                 </h3>
                 <p className="text-xs text-emerald-800 dark:text-emerald-300">
                   Total ETB:{" "}
                   <strong className="font-mono text-base">
                     {formatETB(saleResult.totalAmount)}
                   </strong>{" "}
+                  {saleResult.isCredit && (
+                    <span className="font-semibold text-amber-800 dark:text-amber-300">
+                      &bull; Remaining Customer Credit Debt:{" "}
+                      <strong>{formatETB(saleResult.creditRemaining || 0)}</strong>
+                    </span>
+                  )}
                   &bull; Stock ledger updated.
                 </p>
               </div>
@@ -265,13 +301,23 @@ export function POSRegister({ products, units, stockView }: POSRegisterProps) {
               >
                 New Order
               </Button>
-              <Button
-                size="sm"
-                className="bg-amber-600 hover:bg-amber-700 text-white"
-                onClick={() => router.push("/sales")}
-              >
-                View Sales Log
-              </Button>
+              {saleResult.isCredit ? (
+                <Button
+                  size="sm"
+                  className="bg-amber-600 hover:bg-amber-700 text-white"
+                  onClick={() => router.push("/credit")}
+                >
+                  Manage Credit Accounts
+                </Button>
+              ) : (
+                <Button
+                  size="sm"
+                  className="bg-amber-600 hover:bg-amber-700 text-white"
+                  onClick={() => router.push("/sales")}
+                >
+                  View Sales Log
+                </Button>
+              )}
             </div>
           </div>
         </Card>
@@ -623,6 +669,122 @@ export function POSRegister({ products, units, stockView }: POSRegisterProps) {
                     })}
                   </div>
                 </div>
+
+                {/* Dedicated Credit Agreement Options */}
+                {paymentMethod === "credit" && (
+                  <div className="rounded-lg bg-amber-500/10 border border-amber-500/30 p-3.5 space-y-3 text-xs">
+                    <div className="flex items-center justify-between">
+                      <span className="font-semibold text-amber-900 dark:text-amber-200 flex items-center gap-1.5">
+                        <CreditCard className="h-4 w-4 text-amber-600" />
+                        {t("pay_credit")} ({t("credit_down_payment")})
+                      </span>
+                      <div className="flex gap-1">
+                        <button
+                          type="button"
+                          className="h-6 text-[10px] px-2 py-0.5 rounded border bg-background font-medium hover:bg-muted"
+                          onClick={() => setDownPayment(0)}
+                        >
+                          100% {t("pay_credit")}
+                        </button>
+                        <button
+                          type="button"
+                          className="h-6 text-[10px] px-2 py-0.5 rounded border bg-background font-medium hover:bg-muted"
+                          onClick={() => setDownPayment(Number((cartTotal * 0.5).toFixed(2)))}
+                        >
+                          50% {t("credit_down_payment")}
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2.5">
+                      <div className="space-y-1">
+                        <Label htmlFor="downPayment" className="text-[11px] font-medium">
+                          {t("credit_down_payment")} (ETB)
+                        </Label>
+                        <Input
+                          id="downPayment"
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          max={cartTotal}
+                          value={downPayment}
+                          onChange={(e) =>
+                            setDownPayment(
+                              Math.min(cartTotal, Math.max(0, parseFloat(e.target.value) || 0))
+                            )
+                          }
+                          className="h-8 text-xs bg-background"
+                        />
+                      </div>
+
+                      <div className="space-y-1">
+                        <Label htmlFor="dueDate" className="text-[11px] font-medium">
+                          {t("credit_due_date")} *
+                        </Label>
+                        <Input
+                          id="dueDate"
+                          type="date"
+                          value={dueDate}
+                          onChange={(e) => setDueDate(e.target.value)}
+                          className="h-8 text-xs bg-background"
+                        />
+                      </div>
+                    </div>
+
+                    {downPayment > 0 && (
+                      <div className="space-y-1">
+                        <Label className="text-[11px] font-medium">
+                          Down Payment Method
+                        </Label>
+                        <div className="grid grid-cols-4 gap-1 text-[11px]">
+                          {(["cash", "telebirr", "cbe_birr", "bank_transfer"] as const).map((m) => (
+                            <button
+                              key={m}
+                              type="button"
+                              onClick={() => setDownPaymentMethod(m)}
+                              className={`p-1 rounded border text-center font-medium capitalize text-[10px] ${
+                                downPaymentMethod === m
+                                  ? "bg-amber-600 text-white border-amber-600 font-bold"
+                                  : "bg-background text-muted-foreground"
+                              }`}
+                            >
+                              {m === "bank_transfer" ? "Bank" : m === "cbe_birr" ? "CBE" : m}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Live Balance Computation */}
+                    <div className="p-2.5 rounded bg-background/80 border text-[11px] space-y-1">
+                      <div className="flex justify-between text-muted-foreground">
+                        <span>{t("credit_down_payment")}:</span>
+                        <span className="font-semibold text-foreground">{formatETB(downPayment)}</span>
+                      </div>
+                      <div className="flex justify-between border-t pt-1 font-bold">
+                        <span className="text-red-600 dark:text-red-400">
+                          {t("credit_remaining_balance")}:
+                        </span>
+                        <span className="text-red-600 dark:text-red-400 text-sm">
+                          {formatETB(Math.max(0, cartTotal - downPayment))}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="space-y-1">
+                      <Label htmlFor="creditNotes" className="text-[11px]">
+                        {t("credit_notes")}
+                      </Label>
+                      <Input
+                        id="creditNotes"
+                        placeholder="e.g. Agreement to pay in 2 installments / Guarantor name..."
+                        value={creditNotes}
+                        onChange={(e) => setCreditNotes(e.target.value)}
+                        className="h-8 text-xs bg-background"
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Total Summary and Complete Button */}
