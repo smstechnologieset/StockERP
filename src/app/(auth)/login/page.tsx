@@ -6,12 +6,15 @@ import { Wheat, ShieldCheck, UserCheck, ArrowRight, AlertCircle, Loader2 } from 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { createClient } from "@/lib/supabase/client";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
+import { LanguageSwitcher } from "@/components/navigation/LanguageSwitcher";
 
 export default function LoginPage() {
   const router = useRouter();
   const supabase = createClient();
+  const { t } = useLanguage();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -70,7 +73,12 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-amber-50/60 via-background to-orange-50/40 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-amber-50/60 via-background to-orange-50/40 p-4 relative">
+      {/* Language Switcher in top corner */}
+      <div className="absolute top-4 right-4 z-20">
+        <LanguageSwitcher />
+      </div>
+
       {/* Background Decorative Circles */}
       <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-amber-400/10 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-orange-500/10 rounded-full blur-3xl pointer-events-none" />
@@ -81,11 +89,11 @@ export default function LoginPage() {
             <Wheat className="h-8 w-8" />
           </div>
           <CardTitle className="text-2xl font-bold font-heading text-foreground pt-2">
-            Grain & Powder ERP
+            {t("login_title")}
           </CardTitle>
-          <CardDescription className="text-sm">
-            Addis Ababa Commodity Trading & Inventory Management
-          </CardDescription>
+          <p className="text-xs text-muted-foreground">
+            {t("login_subtitle")}
+          </p>
         </CardHeader>
 
         <CardContent>
@@ -98,7 +106,7 @@ export default function LoginPage() {
 
           <form onSubmit={handleLogin} className="space-y-4">
             <div className="space-y-1.5">
-              <Label htmlFor="email">Email Address</Label>
+              <Label htmlFor="email">{t("login_email")}</Label>
               <Input
                 id="email"
                 type="email"
@@ -112,7 +120,7 @@ export default function LoginPage() {
 
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
-                <Label htmlFor="password">Password</Label>
+                <Label htmlFor="password">{t("login_password")}</Label>
               </div>
               <Input
                 id="password"
@@ -133,11 +141,11 @@ export default function LoginPage() {
               {loading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Signing In...
+                  {t("btn_signing_in")}
                 </>
               ) : (
                 <>
-                  Sign In <ArrowRight className="ml-2 h-4 w-4" />
+                  {t("btn_sign_in")} <ArrowRight className="ml-2 h-4 w-4" />
                 </>
               )}
             </Button>
@@ -147,7 +155,7 @@ export default function LoginPage() {
           <div className="mt-8 pt-6 border-t">
             <div className="text-center mb-3">
               <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Quick-Fill Test Credentials
+                {t("login_quick_fill")}
               </span>
             </div>
             <div className="grid grid-cols-2 gap-3">
@@ -159,7 +167,7 @@ export default function LoginPage() {
                 className="flex items-center gap-2 border-amber-600/30 hover:bg-amber-50 dark:hover:bg-amber-950/40 text-xs"
               >
                 <ShieldCheck className="h-3.5 w-3.5 text-amber-600" />
-                <span>Fill Manager</span>
+                <span>{t("login_fill_manager")}</span>
               </Button>
 
               <Button
@@ -170,22 +178,22 @@ export default function LoginPage() {
                 className="flex items-center gap-2 border-blue-600/30 hover:bg-blue-50 dark:hover:bg-blue-950/40 text-xs"
               >
                 <UserCheck className="h-3.5 w-3.5 text-blue-600" />
-                <span>Fill Staff</span>
+                <span>{t("login_fill_staff")}</span>
               </Button>
             </div>
             <div className="mt-3 p-2.5 rounded-lg bg-muted/40 text-[11px] text-muted-foreground space-y-1">
               <div>
-                <strong>Manager:</strong> <code className="text-foreground">manager@stockerp.et</code> / <code className="text-foreground">Password123!</code>
+                <strong>{t("owner_manager")}:</strong> <code className="text-foreground">manager@stockerp.et</code> / <code className="text-foreground">Password123!</code>
               </div>
               <div>
-                <strong>Staff:</strong> <code className="text-foreground">staff@stockerp.et</code> / <code className="text-foreground">Password123!</code>
+                <strong>{t("staff")}:</strong> <code className="text-foreground">staff@stockerp.et</code> / <code className="text-foreground">Password123!</code>
               </div>
             </div>
           </div>
         </CardContent>
 
         <CardFooter className="flex justify-center border-t py-4 text-xs text-muted-foreground bg-muted/20 rounded-b-xl">
-          Protected by Supabase Row Level Security & JWT
+          {t("login_footer")}
         </CardFooter>
       </Card>
     </div>

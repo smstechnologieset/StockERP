@@ -12,6 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { createClient } from "@/lib/supabase/client";
 import { Loader2 } from "lucide-react";
 import type { Supplier } from "@/types/database";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
 
 interface SupplierFormModalProps {
   open: boolean;
@@ -26,6 +27,7 @@ export function SupplierFormModal({
   supplierToEdit,
   onSuccess,
 }: SupplierFormModalProps) {
+  const { t, language } = useLanguage();
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const supabase = createClient();
@@ -83,7 +85,7 @@ export function SupplierFormModal({
       reset();
       onSuccess();
     } catch (err: any) {
-      setErrorMessage(err.message || "Failed to save supplier.");
+      setErrorMessage(err.message || (language === "am" ? "አቅራቢውን ማስቀመጥ አልተቻለም።" : "Failed to save supplier."));
     } finally {
       setLoading(false);
     }
@@ -94,10 +96,10 @@ export function SupplierFormModal({
       <DialogContent onClose={() => onOpenChange(false)}>
         <DialogHeader>
           <DialogTitle>
-            {supplierToEdit ? "Edit Supplier / Farmer" : "Add Supplier / Farmer"}
+            {supplierToEdit ? t("sup_modal_edit_title") : t("sup_modal_add_title")}
           </DialogTitle>
           <DialogDescription>
-            Record vendor details for incoming grain and powder purchase orders.
+            {t("sup_modal_desc")}
           </DialogDescription>
         </DialogHeader>
 
@@ -109,10 +111,10 @@ export function SupplierFormModal({
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-1.5">
-            <Label htmlFor="name">Business / Farmer Name *</Label>
+            <Label htmlFor="name">{t("sup_name_label")}</Label>
             <Input
               id="name"
-              placeholder="e.g. Oromia Grain Farmers Co-op, Merkato Spice Wholesalers"
+              placeholder={language === "am" ? "ምሳሌ፡ የኦሮሚያ እህል አብቃዮች ህብረት ስራ ማህበር፣ መርካቶ ቅመማ ቅመም" : "e.g. Oromia Grain Farmers Co-op, Merkato Spice Wholesalers"}
               {...register("name")}
             />
             {errors.name && (
@@ -122,16 +124,16 @@ export function SupplierFormModal({
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <Label htmlFor="contact_person">Contact Person</Label>
+              <Label htmlFor="contact_person">{t("sup_contact_label")}</Label>
               <Input
                 id="contact_person"
-                placeholder="e.g. Ato Girma Tadesse"
+                placeholder={language === "am" ? "ምሳሌ፡ አቶ ግርማ ታደሰ" : "e.g. Ato Girma Tadesse"}
                 {...register("contact_person")}
               />
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="phone">Phone Number</Label>
+              <Label htmlFor="phone">{t("sup_phone_label")}</Label>
               <Input
                 id="phone"
                 placeholder="e.g. +251 911 234567"
@@ -141,19 +143,19 @@ export function SupplierFormModal({
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="address">Location / Region</Label>
+            <Label htmlFor="address">{t("sup_address_label")}</Label>
             <Input
               id="address"
-              placeholder="e.g. Arsi / Bale, Oromia, or Addis Merkato"
+              placeholder={language === "am" ? "ምሳሌ፡ አርሲ / ባሌ፣ ኦሮሚያ ወይም አዲስ አበባ መርካቶ" : "e.g. Arsi / Bale, Oromia, or Addis Merkato"}
               {...register("address")}
             />
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="notes">Notes / Specialization</Label>
+            <Label htmlFor="notes">{t("sup_notes_label")}</Label>
             <Textarea
               id="notes"
-              placeholder="Commodities supplied (e.g. Sinde Grade A, Pure Berbere chili), payment terms..."
+              placeholder={language === "am" ? "የሚያቀርቧቸው እህሎች (ስንዴ፣ በርበሬ...)፣ የክፍያ ሁኔታ..." : "Commodities supplied (e.g. Sinde Grade A, Pure Berbere chili), payment terms..."}
               {...register("notes")}
             />
           </div>
@@ -164,7 +166,7 @@ export function SupplierFormModal({
               variant="outline"
               onClick={() => onOpenChange(false)}
             >
-              Cancel
+              {t("btn_cancel")}
             </Button>
             <Button
               type="submit"
@@ -173,12 +175,10 @@ export function SupplierFormModal({
             >
               {loading ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving...
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" /> {t("btn_processing")}
                 </>
-              ) : supplierToEdit ? (
-                "Update Supplier"
               ) : (
-                "Add Supplier"
+                t("btn_save")
               )}
             </Button>
           </DialogFooter>

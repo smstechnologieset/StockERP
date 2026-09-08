@@ -217,12 +217,10 @@ export function CreditClient({ initialCredits, initialError }: CreditClientProps
         <div>
           <h1 className="text-2xl font-bold font-heading tracking-tight text-foreground sm:text-3xl flex items-center gap-2.5">
             <CreditCard className="h-7 w-7 text-amber-600" />
-            {t("nav_credit")} (Accounts Receivable)
+            {t("credit_page_title")}
           </h1>
           <p className="text-sm text-muted-foreground">
-            {isAmharic
-              ? "የደንበኞች የብድር ሂሳብ፣ የቅድመ ክፍያ፣ የክፍያ ጭማሪ እና የቀን ገደብ አስተዳደር ማዕከል"
-              : "Track customer credit sales, initial down payments, installment repayments, and overdue balances."}
+            {t("credit_page_subtitle")}
           </p>
         </div>
 
@@ -258,7 +256,9 @@ export function CreditClient({ initialCredits, initialError }: CreditClientProps
               {formatETB(metrics.totalOutstanding)}
             </div>
             <p className="text-xs text-muted-foreground mt-1">
-              Across {metrics.activeDebtors} {t("credit_active_debtors")}
+              {isAmharic
+                ? `በ${metrics.activeDebtors} ንቁ ባለእዳዎች ላይ ያለ`
+                : `Across ${metrics.activeDebtors} ${t("credit_active_debtors")}`}
             </p>
           </CardContent>
         </Card>
@@ -276,7 +276,7 @@ export function CreditClient({ initialCredits, initialError }: CreditClientProps
               {formatETB(metrics.totalCollected)}
             </div>
             <p className="text-xs text-muted-foreground mt-1">
-              Down payments & installments
+              {isAmharic ? "ቅድመ ክፍያዎች እና ተከፋዮች" : "Down payments & installments"}
             </p>
           </CardContent>
         </Card>
@@ -285,7 +285,7 @@ export function CreditClient({ initialCredits, initialError }: CreditClientProps
         <Card className="border">
           <CardHeader className="pb-2">
             <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center justify-between">
-              <span>Total Credit Extended</span>
+              <span>{isAmharic ? "ጠቅላላ የተሰጠ ብድር" : "Total Credit Extended"}</span>
               <Receipt className="h-4 w-4 text-amber-600" />
             </CardTitle>
           </CardHeader>
@@ -294,7 +294,7 @@ export function CreditClient({ initialCredits, initialError }: CreditClientProps
               {formatETB(metrics.totalExtended)}
             </div>
             <p className="text-xs text-muted-foreground mt-1">
-              Total historical credit invoices
+              {isAmharic ? "በታሪክ የተሰጡ ጠቅላላ የብድር ደረሰኞች" : "Total historical credit invoices"}
             </p>
           </CardContent>
         </Card>
@@ -309,9 +309,11 @@ export function CreditClient({ initialCredits, initialError }: CreditClientProps
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-amber-600">
-              {metrics.overdueCount} Accounts
+              {metrics.overdueCount} {isAmharic ? "መለያዎች" : "Accounts"}
             </div>
-            <p className="text-xs text-muted-foreground mt-1">Past designated payment due date</p>
+            <p className="text-xs text-muted-foreground mt-1">
+              {isAmharic ? "የተሰጠው የመክፈያ ቀን ያለፈባቸው" : "Past designated payment due date"}
+            </p>
           </CardContent>
         </Card>
       </div>
@@ -324,7 +326,7 @@ export function CreditClient({ initialCredits, initialError }: CreditClientProps
             <div className="relative flex-1 max-w-md">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search by customer name, phone, or invoice..."
+                placeholder={isAmharic ? "በደንበኛ ስም፣ ስልክ፣ ወይም ደረሰኝ ቁጥር ፈልግ..." : "Search by customer name, phone, or invoice..."}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="pl-9 h-9 text-xs"
@@ -361,10 +363,12 @@ export function CreditClient({ initialCredits, initialError }: CreditClientProps
           <div className="flex items-center justify-between">
             <div>
               <CardTitle className="text-base font-semibold">
-                Customer Credit Accounts ({filteredCredits.length})
+                {isAmharic ? "የደንበኞች የብድር ሂሳብ መዝገብ" : "Customer Credit Accounts"} ({filteredCredits.length})
               </CardTitle>
               <CardDescription className="text-xs">
-                Click "Record Repayment" to log installment cash or Telebirr receipts.
+                {isAmharic
+                  ? "ተከታታይ የጥሬ ገንዘብ ወይም የቴሌብር ክፍያዎችን ለመመዝገብ 'ክፍያ መዝግብ' የሚለውን ይጫኑ።"
+                  : 'Click "Record Repayment" to log installment cash or Telebirr receipts.'}
               </CardDescription>
             </div>
           </div>
@@ -374,15 +378,15 @@ export function CreditClient({ initialCredits, initialError }: CreditClientProps
             <table className="w-full text-left text-xs">
               <thead className="bg-muted/40 uppercase tracking-wider text-[11px] font-semibold text-muted-foreground border-b">
                 <tr>
-                  <th className="px-5 py-3">Customer</th>
-                  <th className="px-5 py-3">Invoice & Date</th>
-                  <th className="px-5 py-3 text-right">Total Sale</th>
-                  <th className="px-5 py-3 text-right">Down Payment</th>
-                  <th className="px-5 py-3 text-right">Paid Amount</th>
-                  <th className="px-5 py-3 text-right text-red-600 dark:text-red-400">Remaining Balance</th>
-                  <th className="px-5 py-3 text-center">Due Date</th>
-                  <th className="px-5 py-3 text-center">Status</th>
-                  <th className="px-5 py-3 text-right">Actions</th>
+                  <th className="px-5 py-3">{isAmharic ? "ደንበኛ" : "Customer"}</th>
+                  <th className="px-5 py-3">{isAmharic ? "ደረሰኝና ቀን" : "Invoice & Date"}</th>
+                  <th className="px-5 py-3 text-right">{isAmharic ? "ጠቅላላ ሽያጭ" : "Total Sale"}</th>
+                  <th className="px-5 py-3 text-right">{t("credit_down_payment")}</th>
+                  <th className="px-5 py-3 text-right">{isAmharic ? "የተከፈለ መጠን" : "Paid Amount"}</th>
+                  <th className="px-5 py-3 text-right text-red-600 dark:text-red-400">{t("credit_remaining_balance")}</th>
+                  <th className="px-5 py-3 text-center">{t("credit_due_date")}</th>
+                  <th className="px-5 py-3 text-center">{t("common_status")}</th>
+                  <th className="px-5 py-3 text-right">{t("common_actions")}</th>
                 </tr>
               </thead>
               <tbody className="divide-y">
@@ -438,7 +442,7 @@ export function CreditClient({ initialCredits, initialError }: CreditClientProps
                           </span>
                         ) : (
                           <span className="text-emerald-600 text-xs font-medium">
-                            0.00 ETB (Settled)
+                            0.00 {isAmharic ? "ብር (የተከፈለ)" : "ETB (Settled)"}
                           </span>
                         )}
                       </td>
@@ -452,7 +456,7 @@ export function CreditClient({ initialCredits, initialError }: CreditClientProps
                             {isOverdue && (
                               <div>
                                 <Badge variant="danger" className="text-[9px] px-1 py-0 uppercase">
-                                  Overdue
+                                  {isAmharic ? "ቀኑ ያለፈበት" : "Overdue"}
                                 </Badge>
                               </div>
                             )}
@@ -496,7 +500,7 @@ export function CreditClient({ initialCredits, initialError }: CreditClientProps
                               disabled
                               className="h-7 text-xs px-2 text-emerald-700 bg-emerald-50/50"
                             >
-                              <CheckCircle2 className="h-3 w-3 mr-1" /> Settled
+                              <CheckCircle2 className="h-3 w-3 mr-1" /> {isAmharic ? "ተጠናቋል" : "Settled"}
                             </Button>
                           )}
 
@@ -504,7 +508,7 @@ export function CreditClient({ initialCredits, initialError }: CreditClientProps
                             variant="ghost"
                             size="sm"
                             onClick={() => handleOpenHistory(c)}
-                            title="View Payment History"
+                            title={isAmharic ? "የክፍያ ታሪክ እይ" : "View Payment History"}
                             className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground"
                           >
                             <History className="h-3.5 w-3.5" />
@@ -518,7 +522,7 @@ export function CreditClient({ initialCredits, initialError }: CreditClientProps
                 {filteredCredits.length === 0 && (
                   <tr>
                     <td colSpan={9} className="h-32 text-center text-muted-foreground">
-                      No credit records match your filter criteria.
+                      {isAmharic ? "ምንም የብድር መረጃ አልተገኘም።" : "No credit records match your filter criteria."}
                     </td>
                   </tr>
                 )}
@@ -534,10 +538,10 @@ export function CreditClient({ initialCredits, initialError }: CreditClientProps
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <DollarSign className="h-5 w-5 text-amber-600" />
-              {t("btn_record_repayment")}
+              {t("credit_repay_modal_title")}
             </DialogTitle>
             <DialogDescription>
-              Record an installment repayment or settle the remaining customer credit balance.
+              {t("credit_repay_modal_desc")}
             </DialogDescription>
           </DialogHeader>
 
@@ -552,12 +556,12 @@ export function CreditClient({ initialCredits, initialError }: CreditClientProps
               {/* Customer summary box */}
               <div className="p-3 rounded-lg bg-muted/40 border space-y-1.5 text-xs">
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Customer:</span>
+                  <span className="text-muted-foreground">{isAmharic ? "ደንበኛ:" : "Customer:"}</span>
                   <span className="font-semibold text-foreground">{selectedCredit.customer_name}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Invoice Reference:</span>
-                  <span className="font-mono">{selectedCredit.sale?.invoice_number || "POS Invoice"}</span>
+                  <span className="text-muted-foreground">{isAmharic ? "የደረሰኝ ቁጥር:" : "Invoice Reference:"}</span>
+                  <span className="font-mono">{selectedCredit.sale?.invoice_number || (isAmharic ? "የሽያጭ ደረሰኝ" : "POS Invoice")}</span>
                 </div>
                 <div className="flex justify-between border-t pt-1">
                   <span className="text-muted-foreground">{t("credit_remaining_balance")}:</span>
@@ -589,14 +593,14 @@ export function CreditClient({ initialCredits, initialError }: CreditClientProps
                     )
                   }
                 >
-                  Pay 50% Installment
+                  {isAmharic ? "50% ከፊል ክፍያ ክፈል" : "Pay 50% Installment"}
                 </Button>
               </div>
 
               {/* Amount Input */}
               <div className="space-y-1">
                 <Label htmlFor="paymentAmount" className="text-xs font-semibold">
-                  Repayment Amount (ETB) *
+                  {t("credit_repay_amount_label")}
                 </Label>
                 <Input
                   id="paymentAmount"
@@ -610,7 +614,7 @@ export function CreditClient({ initialCredits, initialError }: CreditClientProps
                   required
                 />
                 <p className="text-[11px] text-muted-foreground">
-                  New Remaining Debt:{" "}
+                  {isAmharic ? "አዲስ የቀረ እዳ፡" : "New Remaining Debt:"}{" "}
                   <strong>
                     {formatETB(
                       Math.max(0, Number(selectedCredit.remaining_balance) - paymentAmount)
@@ -627,7 +631,7 @@ export function CreditClient({ initialCredits, initialError }: CreditClientProps
                     { id: "cash", label: t("pay_cash"), icon: Banknote },
                     { id: "telebirr", label: t("pay_telebirr"), icon: Smartphone },
                     { id: "cbe_birr", label: t("pay_cbe_birr"), icon: Smartphone },
-                    { id: "bank_transfer", label: "Bank", icon: Building },
+                    { id: "bank_transfer", label: isAmharic ? "ባንክ" : "Bank", icon: Building },
                   ].map((m) => {
                     const Icon = m.icon;
                     const isSel = paymentMethod === m.id;
@@ -653,11 +657,11 @@ export function CreditClient({ initialCredits, initialError }: CreditClientProps
               {/* Reference Note */}
               <div className="space-y-1">
                 <Label htmlFor="referenceNote" className="text-xs">
-                  Receipt / Transaction Note
+                  {t("credit_ref_note_label")}
                 </Label>
                 <Input
                   id="referenceNote"
-                  placeholder="e.g. Telebirr Txn ID: TB90281 or Cash receipt #104"
+                  placeholder={t("credit_ref_note_placeholder")}
                   value={referenceNote}
                   onChange={(e) => setReferenceNote(e.target.value)}
                   className="text-xs"
@@ -679,10 +683,12 @@ export function CreditClient({ initialCredits, initialError }: CreditClientProps
                 >
                   {submitting ? (
                     <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Recording...
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" /> {isAmharic ? "በመመዝገብ ላይ..." : "Recording..."}
                     </>
                   ) : (
-                    `Confirm Payment (${formatETB(paymentAmount)})`
+                    isAmharic
+                      ? `ክፍያ አረጋግጥ (${formatETB(paymentAmount)})`
+                      : `Confirm Payment (${formatETB(paymentAmount)})`
                   )}
                 </Button>
               </DialogFooter>
@@ -697,10 +703,12 @@ export function CreditClient({ initialCredits, initialError }: CreditClientProps
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <History className="h-5 w-5 text-amber-600" />
-              {t("credit_history")}
+              {t("credit_history_modal_title")}
             </DialogTitle>
             <DialogDescription>
-              Complete record of installments received for {historyCredit?.customer_name}.
+              {isAmharic
+                ? `ለ${historyCredit?.customer_name} የተከፈሉ ከፊል ክፍያዎች ዝርዝር መዝገብ።`
+                : `Complete record of installments received for ${historyCredit?.customer_name}.`}
             </DialogDescription>
           </DialogHeader>
 
@@ -708,17 +716,17 @@ export function CreditClient({ initialCredits, initialError }: CreditClientProps
             <div className="space-y-4">
               <div className="grid grid-cols-3 gap-2 p-3 bg-muted/30 rounded-lg text-xs text-center">
                 <div>
-                  <span className="text-muted-foreground block">Total Credit:</span>
+                  <span className="text-muted-foreground block">{isAmharic ? "ጠቅላላ ብድር:" : "Total Credit:"}</span>
                   <strong className="text-foreground">{formatETB(historyCredit.total_sale_amount)}</strong>
                 </div>
                 <div>
-                  <span className="text-muted-foreground block">Total Repaid:</span>
+                  <span className="text-muted-foreground block">{isAmharic ? "የተከፈለ:" : "Total Repaid:"}</span>
                   <strong className="text-emerald-700 dark:text-emerald-400">
                     {formatETB(historyCredit.paid_amount)}
                   </strong>
                 </div>
                 <div>
-                  <span className="text-muted-foreground block">Remaining:</span>
+                  <span className="text-muted-foreground block">{isAmharic ? "ቀሪ እዳ:" : "Remaining:"}</span>
                   <strong className="text-red-600">
                     {formatETB(historyCredit.remaining_balance)}
                   </strong>
@@ -754,7 +762,7 @@ export function CreditClient({ initialCredits, initialError }: CreditClientProps
                   ))
                 ) : (
                   <div className="py-8 text-center text-xs text-muted-foreground">
-                    No installment payments recorded yet for this credit account.
+                    {isAmharic ? "ለዚህ የብድር ሂሳብ እስካሁን የተመዘገበ ክፍያ የለም።" : "No installment payments recorded yet for this credit account."}
                   </div>
                 )}
               </div>
@@ -764,7 +772,7 @@ export function CreditClient({ initialCredits, initialError }: CreditClientProps
                   variant="outline"
                   onClick={() => setHistoryModalOpen(false)}
                 >
-                  Close
+                  {t("btn_close")}
                 </Button>
               </DialogFooter>
             </div>

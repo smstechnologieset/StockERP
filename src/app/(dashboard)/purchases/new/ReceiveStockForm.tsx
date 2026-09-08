@@ -22,6 +22,7 @@ import { formatETB, formatQuantity } from "@/lib/utils";
 import { createPurchaseAction } from "@/app/actions/purchases";
 import type { Product, Unit, Supplier } from "@/types/database";
 import Link from "next/link";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
 
 interface LineItemRow {
   productId: string;
@@ -42,6 +43,7 @@ export function ReceiveStockForm({
   suppliers,
 }: ReceiveStockFormProps) {
   const router = useRouter();
+  const { t, isAmharic, language } = useLanguage();
 
   const [supplierId, setSupplierId] = useState(suppliers[0]?.id || "");
   const [purchaseDate, setPurchaseDate] = useState(
@@ -132,11 +134,19 @@ export function ReceiveStockForm({
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!supplierId) {
-      setErrorMessage("Please select a supplier or create one first.");
+      setErrorMessage(
+        language === "am"
+          ? "እባክዎ መጀመሪያ አቅራቢ ይምረጡ ወይም ይመዝግቡ።"
+          : "Please select a supplier or create one first."
+      );
       return;
     }
     if (items.length === 0) {
-      setErrorMessage("Please add at least one line item.");
+      setErrorMessage(
+        language === "am"
+          ? "እባክዎ ቢያንስ አንድ እህል ያስገቡ።"
+          : "Please add at least one line item."
+      );
       return;
     }
 
@@ -169,7 +179,10 @@ export function ReceiveStockForm({
         router.refresh();
       }, 1200);
     } else {
-      setErrorMessage(res.error || "Failed to record purchase.");
+      setErrorMessage(
+        res.error ||
+          (language === "am" ? "የእቃ ግዢውን መመዝገብ አልተቻለም።" : "Failed to record purchase.")
+      );
       setLoading(false);
     }
   }
@@ -180,16 +193,16 @@ export function ReceiveStockForm({
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold font-heading tracking-tight text-foreground sm:text-3xl">
-            Receive Stock (Purchases)
+            {t("purch_receive_title")}
           </h1>
           <p className="text-sm text-muted-foreground">
-            Log incoming grain shipments from farmers or wholesalers. Automatically updates inventory ledger in base grams.
+            {t("purch_receive_desc")}
           </p>
         </div>
 
         <Link href="/purchases">
           <Button variant="outline" size="sm">
-            View Past Shipments
+            {t("btn_view_history")}
           </Button>
         </Link>
       </div>
@@ -204,7 +217,7 @@ export function ReceiveStockForm({
         <div className="p-4 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-800 text-sm flex items-center gap-2">
           <CheckCircle2 className="h-5 w-5 text-emerald-600" />
           <span>
-            Stock receipt recorded successfully! Immutable stock ledger updated. Redirecting to inventory...
+            {t("purch_stock_success_title")} {t("purch_stock_success_desc")}
           </span>
         </div>
       )}
@@ -214,13 +227,13 @@ export function ReceiveStockForm({
         <CardHeader className="pb-4 border-b">
           <div className="flex items-center gap-2">
             <Building2 className="h-4 w-4 text-amber-600" />
-            <CardTitle className="text-base font-semibold">Vendor & Shipment Details</CardTitle>
+            <CardTitle className="text-base font-semibold">{t("sup_table_title")}</CardTitle>
           </div>
         </CardHeader>
         <CardContent className="pt-4">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="space-y-1.5">
-              <Label htmlFor="supplierId">Supplier / Farmer *</Label>
+              <Label htmlFor="supplierId">{t("purch_supplier_label")}</Label>
               {suppliers.length > 0 ? (
                 <select
                   id="supplierId"
@@ -237,16 +250,16 @@ export function ReceiveStockForm({
                 </select>
               ) : (
                 <div className="text-xs text-amber-700">
-                  No suppliers found.{" "}
+                  {t("purch_select_supplier")}{" "}
                   <Link href="/suppliers" className="underline font-semibold">
-                    Add a supplier first
+                    {t("btn_add_supplier")}
                   </Link>
                 </div>
               )}
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="purchaseDate">Arrival / Purchase Date</Label>
+              <Label htmlFor="purchaseDate">{t("purch_date_label")}</Label>
               <Input
                 id="purchaseDate"
                 type="date"
@@ -257,10 +270,10 @@ export function ReceiveStockForm({
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="invoiceRef">Supplier Invoice / Waybill No.</Label>
+              <Label htmlFor="invoiceRef">{t("purch_waybill_label")}</Label>
               <Input
                 id="invoiceRef"
-                placeholder="e.g. WB-9921 or REC-041"
+                placeholder={language === "am" ? "ምሳሌ፡ WB-9921 ወይም ደረሰኝ-041" : "e.g. WB-9921 or REC-041"}
                 value={invoiceRef}
                 onChange={(e) => setInvoiceRef(e.target.value)}
               />
@@ -273,9 +286,9 @@ export function ReceiveStockForm({
       <Card className="shadow-sm border">
         <CardHeader className="flex flex-row items-center justify-between pb-4 border-b">
           <div>
-            <CardTitle className="text-base font-semibold">Commodity Line Items</CardTitle>
+            <CardTitle className="text-base font-semibold">{t("purch_line_items_title")}</CardTitle>
             <CardDescription className="text-xs">
-              Quantities entered in Quintals or Kg automatically convert to storage base units (grams).
+              {t("unit_math_card_desc")}
             </CardDescription>
           </div>
           <Button
@@ -285,7 +298,7 @@ export function ReceiveStockForm({
             onClick={addItem}
             className="gap-1 border-amber-600/30 text-amber-900 dark:text-amber-300"
           >
-            <Plus className="h-3.5 w-3.5" /> Add Item Row
+            <Plus className="h-3.5 w-3.5" /> {t("btn_add_line_item")}
           </Button>
         </CardHeader>
         <CardContent className="p-0">
@@ -293,12 +306,12 @@ export function ReceiveStockForm({
             <table className="w-full text-left text-sm">
               <thead className="bg-muted/40 text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b">
                 <tr>
-                  <th className="px-4 py-3 min-w-[200px]">Product / Commodity</th>
-                  <th className="px-4 py-3 min-w-[140px]">Unit</th>
-                  <th className="px-4 py-3 w-32">Quantity</th>
-                  <th className="px-4 py-3 w-36">Unit Cost (ETB)</th>
-                  <th className="px-4 py-3 text-right min-w-[140px]">Base Units (g)</th>
-                  <th className="px-4 py-3 text-right min-w-[130px]">Line Total</th>
+                  <th className="px-4 py-3 min-w-[200px]">{t("purch_commodity_col")}</th>
+                  <th className="px-4 py-3 min-w-[140px]">{t("purch_unit_col")}</th>
+                  <th className="px-4 py-3 w-32">{t("purch_qty_col")}</th>
+                  <th className="px-4 py-3 w-36">{t("purch_unit_cost_col")}</th>
+                  <th className="px-4 py-3 text-right min-w-[140px]">{t("inv_base_grams")}</th>
+                  <th className="px-4 py-3 text-right min-w-[130px]">{t("purch_line_total_col")}</th>
                   <th className="px-4 py-3 w-12 text-center"></th>
                 </tr>
               </thead>
@@ -407,10 +420,14 @@ export function ReceiveStockForm({
           {/* Notes and Total Summary Footer */}
           <div className="p-6 border-t bg-muted/20 flex flex-col sm:flex-row justify-between items-start gap-6">
             <div className="w-full sm:max-w-md space-y-1.5">
-              <Label htmlFor="notes">Shipment Notes / Batch Remarks</Label>
+              <Label htmlFor="notes">{t("purch_notes_label")}</Label>
               <Input
                 id="notes"
-                placeholder="Moisture quality, transport truck plate number, driver name..."
+                placeholder={
+                  language === "am"
+                    ? "የእርጥበት ጥራት፣ የመኪና ታርጋ ቁጥር፣ የአሽከርካሪ ስም..."
+                    : "Moisture quality, transport truck plate number, driver name..."
+                }
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
               />
@@ -418,17 +435,19 @@ export function ReceiveStockForm({
 
             <div className="w-full sm:w-80 rounded-xl border bg-card p-4 space-y-2 shadow-xs">
               <div className="flex justify-between text-xs text-muted-foreground">
-                <span>Total Items:</span>
-                <span className="font-semibold text-foreground">{items.length} Lines</span>
+                <span>{t("purch_items_count")}:</span>
+                <span className="font-semibold text-foreground">
+                  {items.length} {language === "am" ? "ረድፎች" : "Lines"}
+                </span>
               </div>
               <div className="flex justify-between text-xs text-muted-foreground">
-                <span>Total Incoming Weight:</span>
+                <span>{t("common_weight")}:</span>
                 <span className="font-mono font-semibold text-amber-700 dark:text-amber-400">
                   {formatQuantity(totalGrams, "g")}
                 </span>
               </div>
               <div className="border-t pt-2 flex justify-between items-center text-sm font-bold">
-                <span className="text-foreground">Total Shipment Cost:</span>
+                <span className="text-foreground">{t("purch_total_shipment_cost")}:</span>
                 <span className="text-lg text-amber-600">{formatETB(totalCost)}</span>
               </div>
             </div>
@@ -444,7 +463,7 @@ export function ReceiveStockForm({
           onClick={() => router.back()}
           disabled={loading}
         >
-          Cancel
+          {t("btn_cancel")}
         </Button>
         <Button
           type="submit"
@@ -453,11 +472,11 @@ export function ReceiveStockForm({
         >
           {loading ? (
             <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Recording Stock...
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" /> {t("btn_processing")}
             </>
           ) : (
             <>
-              <PackagePlus className="mr-2 h-4 w-4" /> Complete Stock-In
+              <PackagePlus className="mr-2 h-4 w-4" /> {t("btn_record_receipt")}
             </>
           )}
         </Button>

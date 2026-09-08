@@ -55,11 +55,15 @@ export function UsersClient({ initialUsers }: UsersClientProps) {
       setUsers((prev) =>
         prev.map((u) => (u.id === user.id ? { ...u, role: nextRole } : u))
       );
-      setNotice(`Updated role for ${user.full_name} to ${nextRole === "owner_manager" ? "Owner / Manager" : "Staff"}.`);
+      setNotice(
+        isAmharic
+          ? `የ${user.full_name} የስራ ድርሻ ወደ ${nextRole === "owner_manager" ? "ስራ አስኪያጅ" : "ሰራተኛ"} ተቀይሯል።`
+          : `Updated role for ${user.full_name} to ${nextRole === "owner_manager" ? "Owner / Manager" : "Staff"}.`
+      );
       setTimeout(() => setNotice(null), 4000);
       router.refresh();
     } else {
-      setErrorNotice(res.error || "Failed to update role.");
+      setErrorNotice(res.error || (isAmharic ? "የስራ ድርሻ መቀየር አልተቻለም።" : "Failed to update role."));
     }
     setUpdatingId(null);
   }
@@ -71,12 +75,10 @@ export function UsersClient({ initialUsers }: UsersClientProps) {
         <div>
           <h1 className="text-2xl font-bold font-heading tracking-tight text-foreground sm:text-3xl flex items-center gap-2.5">
             <UserCog className="h-7 w-7 text-amber-600" />
-            {t("nav_users")} (Access Control)
+            {t("users_page_title")}
           </h1>
           <p className="text-sm text-muted-foreground">
-            {isAmharic
-              ? "የስራ አስኪያጅ እና የሰራተኛ ፈቃድ አስተዳደር፣ መለያዎችና የቅርንጫፍ ምደባ"
-              : "Manage user roles, administrative permissions, and branch assignments."}
+            {t("users_page_subtitle")}
           </p>
         </div>
       </div>
@@ -101,15 +103,15 @@ export function UsersClient({ initialUsers }: UsersClientProps) {
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-semibold flex items-center gap-2 text-amber-900 dark:text-amber-300">
               <ShieldCheck className="h-4 w-4 text-amber-600" />
-              Owner / Manager Permissions
+              {t("users_mgr_perms_title")}
             </CardTitle>
           </CardHeader>
           <CardContent className="text-xs text-muted-foreground space-y-1">
-            <p>&bull; Full ERP visibility across financial reports & valuation</p>
-            <p>&bull; Manage commodity prices & reorder thresholds</p>
-            <p>&bull; Register & edit suppliers, manage purchase costs</p>
-            <p>&bull; Approve credit sales & manage accounts receivable</p>
-            <p>&bull; Configure units, conversion factors, and users</p>
+            <p>&bull; {isAmharic ? "በፋይናንስ ሪፖርቶችና የክምችት ዋጋ ላይ ሙሉ እይታ" : "Full ERP visibility across financial reports & valuation"}</p>
+            <p>&bull; {isAmharic ? "የእህልና የዱቄት ዋጋዎችን እንዲሁም የማስጠንቀቂያ ገደቦችን ማስተካከል" : "Manage commodity prices & reorder thresholds"}</p>
+            <p>&bull; {isAmharic ? "አቅራቢዎችን መመዝገብና ማረም፣ የግዢ ወጪዎችን መቆጣጠር" : "Register & edit suppliers, manage purchase costs"}</p>
+            <p>&bull; {isAmharic ? "የብድር ሽያጮችን ማጽደቅ እና ያልተሰበሰቡ እዳዎችን ማስተዳደር" : "Approve credit sales & manage accounts receivable"}</p>
+            <p>&bull; {isAmharic ? "መለኪያዎችን፣ የማባዣ ቁጥሮችንና የተጠቃሚዎችን ፈቃድ ማስተዳደር" : "Configure units, conversion factors, and users"}</p>
           </CardContent>
         </Card>
 
@@ -117,15 +119,15 @@ export function UsersClient({ initialUsers }: UsersClientProps) {
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-semibold flex items-center gap-2 text-foreground">
               <UserCheck className="h-4 w-4 text-emerald-600" />
-              Staff Member Permissions
+              {t("users_staff_perms_title")}
             </CardTitle>
           </CardHeader>
           <CardContent className="text-xs text-muted-foreground space-y-1">
-            <p>&bull; Point of Sale (POS) register for daily retail & wholesale cash sales</p>
-            <p>&bull; Record incoming grain and powder purchase receipts</p>
-            <p>&bull; View real-time commodity on-hand inventory levels</p>
-            <p>&bull; Record customer credit installment repayments</p>
-            <p>&bull; Restricted from modifying cost prices or deleting master data</p>
+            <p>&bull; {isAmharic ? "የእለት ተእለት የችርቻሮ እና የጅምላ ሽያጭ መመዝገቢያ (POS)" : "Point of Sale (POS) register for daily retail & wholesale cash sales"}</p>
+            <p>&bull; {isAmharic ? "ከአቅራቢዎች የሚገቡ የእህልና የዱቄት ጭነቶች ደረሰኝ መመዝገብ" : "Record incoming grain and powder purchase receipts"}</p>
+            <p>&bull; {isAmharic ? "በመጋዘን ውስጥ ያለውን ትክክለኛ ክምችት በቅጽበት መከታተል" : "View real-time commodity on-hand inventory levels"}</p>
+            <p>&bull; {isAmharic ? "የደንበኞች ተከፋይ የብድር ክፍያዎችን መመዝገብ" : "Record customer credit installment repayments"}</p>
+            <p>&bull; {isAmharic ? "ዋጋዎችን የመቀየር ወይም ዋና መረጃዎችን የመሰረዝ ፈቃድ የለውም" : "Restricted from modifying cost prices or deleting master data"}</p>
           </CardContent>
         </Card>
       </div>
@@ -136,7 +138,7 @@ export function UsersClient({ initialUsers }: UsersClientProps) {
           <div className="relative max-w-md">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Search users by name, email, or branch..."
+              placeholder={isAmharic ? "ተጠቃሚዎችን በስም፣ ኢሜይል፣ ወይም ቅርንጫፍ ፈልግ..." : "Search users by name, email, or branch..."}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="pl-9 h-9 text-xs"
@@ -149,10 +151,10 @@ export function UsersClient({ initialUsers }: UsersClientProps) {
       <Card className="border shadow-sm">
         <CardHeader className="border-b pb-4 bg-muted/20">
           <CardTitle className="text-base font-semibold">
-            Registered Profiles & Staff Roster ({filteredUsers.length})
+            {t("users_roster_title")} ({filteredUsers.length})
           </CardTitle>
           <CardDescription className="text-xs">
-            Assigned roles and security access levels in the Supabase authentication system.
+            {t("users_roster_desc")}
           </CardDescription>
         </CardHeader>
         <CardContent className="p-0">
@@ -160,12 +162,12 @@ export function UsersClient({ initialUsers }: UsersClientProps) {
             <table className="w-full text-left text-xs">
               <thead className="bg-muted/40 uppercase tracking-wider text-[11px] font-semibold text-muted-foreground border-b">
                 <tr>
-                  <th className="px-5 py-3">Full Name</th>
-                  <th className="px-5 py-3">Login Email</th>
-                  <th className="px-5 py-3">Branch</th>
-                  <th className="px-5 py-3 text-center">Assigned Role</th>
-                  <th className="px-5 py-3 text-center">Registration Date</th>
-                  <th className="px-5 py-3 text-right">Role Access Toggle</th>
+                  <th className="px-5 py-3">{t("users_full_name")}</th>
+                  <th className="px-5 py-3">{t("users_login_email")}</th>
+                  <th className="px-5 py-3">{t("users_branch")}</th>
+                  <th className="px-5 py-3 text-center">{t("users_assigned_role")}</th>
+                  <th className="px-5 py-3 text-center">{t("users_registration_date")}</th>
+                  <th className="px-5 py-3 text-right">{t("users_access_toggle")}</th>
                 </tr>
               </thead>
               <tbody className="divide-y">
@@ -193,7 +195,7 @@ export function UsersClient({ initialUsers }: UsersClientProps) {
                       <td className="px-5 py-3.5">
                         <div className="flex items-center gap-1.5 text-foreground">
                           <Building2 className="h-3.5 w-3.5 text-amber-600" />
-                          <span>{u.branch_name || "Main Branch"}</span>
+                          <span>{u.branch_name === "Main Branch" || !u.branch_name ? t("main_branch") : u.branch_name}</span>
                         </div>
                       </td>
 
@@ -204,11 +206,11 @@ export function UsersClient({ initialUsers }: UsersClientProps) {
                         >
                           {isManager ? (
                             <span className="flex items-center gap-1">
-                              <ShieldCheck className="h-3 w-3" /> Owner / Manager
+                              <ShieldCheck className="h-3 w-3" /> {t("owner_manager")}
                             </span>
                           ) : (
                             <span className="flex items-center gap-1">
-                              <UserCheck className="h-3 w-3" /> Staff
+                              <UserCheck className="h-3 w-3" /> {t("staff")}
                             </span>
                           )}
                         </Badge>
@@ -229,9 +231,9 @@ export function UsersClient({ initialUsers }: UsersClientProps) {
                           {updatingId === u.id ? (
                             <Loader2 className="h-3 w-3 animate-spin" />
                           ) : isManager ? (
-                            "Switch to Staff"
+                            t("btn_switch_to_staff")
                           ) : (
-                            "Promote to Manager"
+                            t("btn_promote_to_manager")
                           )}
                         </Button>
                       </td>

@@ -52,7 +52,7 @@ export function ReportsClient({
   creditOutstanding = 0,
   creditCollected = 0,
 }: ReportsClientProps) {
-  const { t, isAmharic } = useLanguage();
+  const { t, language } = useLanguage();
   const [timeRange, setTimeRange] = useState<"day" | "week" | "month">("week");
 
   const totalRevenue = revenueDaily.reduce((acc, curr) => acc + curr.revenue, 0);
@@ -65,10 +65,10 @@ export function ReportsClient({
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold font-heading tracking-tight text-foreground sm:text-3xl">
-            Management Reports & Analytics
+            {t("reports_title")}
           </h1>
           <p className="text-sm text-muted-foreground">
-            Business intelligence for sales revenue, inventory valuation, commodity demand, and supplier spending.
+            {t("reports_subtitle")}
           </p>
         </div>
 
@@ -79,7 +79,7 @@ export function ReportsClient({
             onClick={() => setTimeRange("day")}
             className="text-xs h-7"
           >
-            Daily
+            {t("reports_daily")}
           </Button>
           <Button
             size="sm"
@@ -87,7 +87,7 @@ export function ReportsClient({
             onClick={() => setTimeRange("week")}
             className="text-xs h-7"
           >
-            Weekly
+            {t("reports_weekly")}
           </Button>
           <Button
             size="sm"
@@ -95,7 +95,7 @@ export function ReportsClient({
             onClick={() => setTimeRange("month")}
             className="text-xs h-7"
           >
-            Monthly
+            {t("reports_monthly")}
           </Button>
         </div>
       </div>
@@ -105,7 +105,7 @@ export function ReportsClient({
         <Card className="border">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Total Sales Revenue
+              {t("reports_sales_rev")}
             </CardTitle>
             <TrendingUp className="h-4 w-4 text-emerald-600" />
           </CardHeader>
@@ -113,14 +113,14 @@ export function ReportsClient({
             <div className="text-2xl font-bold text-foreground">
               {formatETB(totalRevenue)}
             </div>
-            <p className="text-xs text-muted-foreground mt-1">Across all payment channels</p>
+            <p className="text-xs text-muted-foreground mt-1">{t("common_all_payment_channels")}</p>
           </CardContent>
         </Card>
 
         <Card className="border">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Current Stock Valuation
+              {t("stock_current_valuation")}
             </CardTitle>
             <DollarSign className="h-4 w-4 text-amber-600" />
           </CardHeader>
@@ -128,14 +128,14 @@ export function ReportsClient({
             <div className="text-2xl font-bold text-amber-900 dark:text-amber-300">
               {formatETB(totalValuation)}
             </div>
-            <p className="text-xs text-muted-foreground mt-1">On-hand commodities in warehouse</p>
+            <p className="text-xs text-muted-foreground mt-1">{t("common_on_hand_warehouse")}</p>
           </CardContent>
         </Card>
 
         <Card className="border">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Supplier Purchases Cost
+              {t("reports_supplier_purch")}
             </CardTitle>
             <Users className="h-4 w-4 text-blue-600" />
           </CardHeader>
@@ -143,22 +143,22 @@ export function ReportsClient({
             <div className="text-2xl font-bold text-foreground">
               {formatETB(totalPurchases)}
             </div>
-            <p className="text-xs text-muted-foreground mt-1">Total procurement expenses</p>
+            <p className="text-xs text-muted-foreground mt-1">{t("common_procurement_expenses")}</p>
           </CardContent>
         </Card>
 
         <Card className={lowStockItems.length > 0 ? "border-red-500/40 bg-red-50/20" : "border"}>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Low-Stock Warnings
+              {t("stock_low_stock_warning")}
             </CardTitle>
             <AlertTriangle className="h-4 w-4 text-red-600" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-red-600">
-              {lowStockItems.length} Products
+              {lowStockItems.length} {t("common_products_count")}
             </div>
-            <p className="text-xs text-muted-foreground mt-1">Action required by manager</p>
+            <p className="text-xs text-muted-foreground mt-1">{t("common_action_required_mgr")}</p>
           </CardContent>
         </Card>
 
@@ -175,9 +175,11 @@ export function ReportsClient({
               {formatETB(creditOutstanding)}
             </div>
             <div className="mt-1 flex items-center justify-between">
-              <span className="text-xs text-muted-foreground">Collected: {formatETB(creditCollected)}</span>
+              <span className="text-xs text-muted-foreground">
+                {language === "am" ? "የተሰበሰበ፡ " : "Collected: "}{formatETB(creditCollected)}
+              </span>
               <Link href="/credit" className="text-xs font-semibold text-amber-600 hover:underline">
-                Manage &rarr;
+                {language === "am" ? "አስተዳድር" : "Manage"} &rarr;
               </Link>
             </div>
           </CardContent>
@@ -192,10 +194,10 @@ export function ReportsClient({
             <div className="flex items-center justify-between">
               <div>
                 <CardTitle className="text-base font-semibold">
-                  Revenue Timeline ({timeRange.toUpperCase()})
+                  {t("reports_rev_timeline")} ({timeRange === "day" ? t("reports_daily") : timeRange === "week" ? t("reports_weekly") : t("reports_monthly")})
                 </CardTitle>
                 <CardDescription className="text-xs">
-                  Daily POS and wholesale sales revenue in Ethiopian Birr (ETB)
+                  {t("common_daily_pos_desc")}
                 </CardDescription>
               </div>
             </div>
@@ -217,7 +219,7 @@ export function ReportsClient({
                   <XAxis dataKey="date" tick={{ fontSize: 11 }} />
                   <YAxis tick={{ fontSize: 11 }} />
                   <Tooltip
-                    formatter={(value: any) => [formatETB(Number(value)), "Revenue"]}
+                    formatter={(value: any) => [formatETB(Number(value)), language === "am" ? "ገቢ" : "Revenue"]}
                   />
                   <Area
                     type="monotone"
@@ -237,10 +239,10 @@ export function ReportsClient({
         <Card className="lg:col-span-5 shadow-sm border">
           <CardHeader className="border-b pb-4">
             <CardTitle className="text-base font-semibold">
-              Stock Valuation by Category
+              {t("reports_cat_valuation")}
             </CardTitle>
             <CardDescription className="text-xs">
-              Portfolio distribution of stored inventory
+              {t("common_distribution_desc")}
             </CardDescription>
           </CardHeader>
           <CardContent className="pt-6">
@@ -261,7 +263,7 @@ export function ReportsClient({
                     ))}
                   </Pie>
                   <Tooltip
-                    formatter={(value: any) => [formatETB(Number(value)), "Valuation"]}
+                    formatter={(value: any) => [formatETB(Number(value)), language === "am" ? "የገንዘብ ግምት" : "Valuation"]}
                   />
                 </PieChart>
               </ResponsiveContainer>
@@ -287,10 +289,10 @@ export function ReportsClient({
         <Card className="lg:col-span-6 shadow-sm border">
           <CardHeader className="border-b pb-4">
             <CardTitle className="text-base font-semibold">
-              Top-Selling Commodities
+              {t("reports_top_selling")}
             </CardTitle>
             <CardDescription className="text-xs">
-              Highest turnover products by sales volume & revenue
+              {language === "am" ? "በከፍተኛ የሽያጭ መጠን እና ገቢ የተሸጡ እህሎች" : "Highest turnover products by sales volume & revenue"}
             </CardDescription>
           </CardHeader>
           <CardContent className="p-0">
@@ -307,13 +309,15 @@ export function ReportsClient({
                     <div>
                       <h4 className="font-semibold text-sm text-foreground">{prod.name}</h4>
                       <p className="text-xs text-muted-foreground">
-                        Volume: <span className="font-medium text-foreground">{prod.soldDisplay}</span> ({formatQuantity(prod.soldGrams, "g")})
+                        {language === "am" ? "የተሸጠው መጠን" : "Volume"}: <span className="font-medium text-foreground">{prod.soldDisplay}</span> ({formatQuantity(prod.soldGrams, "g")})
                       </p>
                     </div>
                   </div>
                   <div className="text-right">
                     <div className="font-bold text-foreground">{formatETB(prod.revenue)}</div>
-                    <span className="text-[11px] text-emerald-600 font-medium">Revenue</span>
+                    <span className="text-[11px] text-emerald-600 font-medium">
+                      {language === "am" ? "የተገኘ ገቢ" : "Revenue"}
+                    </span>
                   </div>
                 </div>
               ))}
@@ -325,10 +329,10 @@ export function ReportsClient({
         <Card className="lg:col-span-6 shadow-sm border">
           <CardHeader className="border-b pb-4">
             <CardTitle className="text-base font-semibold">
-              Procurement Cost Breakdown by Supplier
+              {t("reports_sup_spending")}
             </CardTitle>
             <CardDescription className="text-xs">
-              Expenses distributed across farming cooperatives and wholesalers
+              {language === "am" ? "ለገበሬ ማህበራትና ለጅምላ አቅራቢዎች የወጣ ጠቅላላ ወጪ" : "Expenses distributed across farming cooperatives and wholesalers"}
             </CardDescription>
           </CardHeader>
           <CardContent className="p-0">
@@ -341,12 +345,14 @@ export function ReportsClient({
                   <div>
                     <h4 className="font-semibold text-sm text-foreground">{sup.name}</h4>
                     <p className="text-xs text-muted-foreground">
-                      {sup.shipments} Incoming Shipments Logged
+                      {sup.shipments} {language === "am" ? "የገቡ ጭነቶች ተመዝግበዋል" : "Incoming Shipments Logged"}
                     </p>
                   </div>
                   <div className="text-right">
                     <div className="font-bold text-foreground">{formatETB(sup.totalCost)}</div>
-                    <span className="text-[11px] text-muted-foreground">Total Spent</span>
+                    <span className="text-[11px] text-muted-foreground">
+                      {language === "am" ? "ጠቅላላ ወጪ" : "Total Spent"}
+                    </span>
                   </div>
                 </div>
               ))}
@@ -362,11 +368,13 @@ export function ReportsClient({
             <div className="flex items-center gap-2">
               <AlertTriangle className="h-5 w-5 text-amber-600" />
               <CardTitle className="text-base font-bold text-foreground">
-                Low-Stock Reorder Priority Center
+                {language === "am" ? "ሊያልቁ የተቃረቡ እቃዎች የማዘዣ ማዕከል" : "Low-Stock Reorder Priority Center"}
               </CardTitle>
             </div>
             <CardDescription className="text-xs">
-              Grams on hand have reached or dropped below reorder threshold. Generate purchase orders to replenish warehouse stock.
+              {language === "am"
+                ? "ያለው ክምችት የማስጠንቀቂያ መጠኑ ላይ የደረሰ ወይም ያነሰ። መጋዘኑን ለመሙላት አዲስ እቃ ይቀበሉ።"
+                : "Grams on hand have reached or dropped below reorder threshold. Generate purchase orders to replenish warehouse stock."}
             </CardDescription>
           </CardHeader>
           <CardContent className="p-0">
@@ -374,10 +382,10 @@ export function ReportsClient({
               <table className="w-full text-left text-sm">
                 <thead className="bg-muted/40 text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b">
                   <tr>
-                    <th className="px-6 py-3">Commodity</th>
-                    <th className="px-6 py-3 text-right">Current On-Hand</th>
-                    <th className="px-6 py-3 text-right">Reorder Threshold</th>
-                    <th className="px-6 py-3 text-right">Action</th>
+                    <th className="px-6 py-3">{language === "am" ? "እህል / ምርት" : "Commodity"}</th>
+                    <th className="px-6 py-3 text-right">{t("inv_on_hand_display")}</th>
+                    <th className="px-6 py-3 text-right">{t("prod_reorder_col")}</th>
+                    <th className="px-6 py-3 text-right">{t("common_actions")}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y">
@@ -395,7 +403,7 @@ export function ReportsClient({
                       <td className="px-6 py-3 text-right">
                         <Link href="/purchases/new">
                           <Button size="sm" className="h-7 text-xs bg-amber-600 hover:bg-amber-700 text-white">
-                            Receive Stock
+                            {t("btn_receive_stock")}
                           </Button>
                         </Link>
                       </td>

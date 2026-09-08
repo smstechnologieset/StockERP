@@ -46,7 +46,7 @@ export function InventoryClient({
   initialFilter,
 }: InventoryClientProps) {
   const router = useRouter();
-  const { t, isAmharic } = useLanguage();
+  const { t, isAmharic, language } = useLanguage();
 
   const [search, setSearch] = useState("");
   const [filterLowStock, setFilterLowStock] = useState(initialFilter === "low-stock");
@@ -91,7 +91,7 @@ export function InventoryClient({
     setAdjustmentType("out");
     setQuantity(1);
     setUnitId(item.default_unit_id || units[0]?.id || "");
-    setReason("Spillage / Wastage during storage");
+    setReason(language === "am" ? "በማከማቻ ወቅት የፈሰሰ / የባከነ" : "Spillage / Wastage during storage");
     setErrorMsg(null);
     setAdjustModalOpen(true);
   }
@@ -101,12 +101,12 @@ export function InventoryClient({
     if (!selectedProduct) return;
 
     if (!quantity || quantity <= 0) {
-      setErrorMsg("Quantity must be greater than 0.");
+      setErrorMsg(language === "am" ? "መጠኑ ከ0 በላይ መሆን አለበት።" : "Quantity must be greater than 0.");
       return;
     }
 
     if (!reason.trim()) {
-      setErrorMsg("Reason is required for inventory audit integrity.");
+      setErrorMsg(language === "am" ? "የማስተካከያ ምክንያት መግለጽ ግዴታ ነው።" : "Reason is required for inventory audit integrity.");
       return;
     }
 
@@ -125,7 +125,7 @@ export function InventoryClient({
       setAdjustModalOpen(false);
       router.refresh();
     } else {
-      setErrorMsg(res.error || "Failed to record adjustment.");
+      setErrorMsg(res.error || (language === "am" ? "ክምችት ማስተካከል አልተቻለም።" : "Failed to record adjustment."));
     }
     setSubmitting(false);
   }
@@ -171,14 +171,14 @@ export function InventoryClient({
         <Card className="border">
           <CardHeader className="pb-2">
             <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Total Active Commodities
+              {t("inv_total_active")}
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-foreground">
-              {initialInventory.length} Products
+              {initialInventory.length} {t("common_products_count")}
             </div>
-            <p className="text-xs text-muted-foreground mt-1">Across Main Branch</p>
+            <p className="text-xs text-muted-foreground mt-1">{t("common_across_branch")}</p>
           </CardContent>
         </Card>
 
@@ -192,7 +192,7 @@ export function InventoryClient({
             <div className="text-2xl font-bold text-amber-900 dark:text-amber-300">
               {formatETB(totalValuation)}
             </div>
-            <p className="text-xs text-muted-foreground mt-1">On-hand grams &times; cost price</p>
+            <p className="text-xs text-muted-foreground mt-1">{t("dash_valuation_math")}</p>
           </CardContent>
         </Card>
 
@@ -204,7 +204,7 @@ export function InventoryClient({
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-red-600">
-              {lowStockCount} Items
+              {lowStockCount} {t("common_items_count")}
             </div>
             <p className="text-xs text-muted-foreground mt-1">{t("stock_reorder_needed")}</p>
           </CardContent>
@@ -218,7 +218,7 @@ export function InventoryClient({
             <div className="relative flex-1 max-w-md">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search inventory commodities or SKU..."
+                placeholder={t("inv_search_placeholder")}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="pl-9 h-9 text-xs"
@@ -233,7 +233,7 @@ export function InventoryClient({
                 className="text-xs gap-1.5"
               >
                 <AlertTriangle className="h-3.5 w-3.5 text-amber-600" />
-                {filterLowStock ? "Show All Stock" : `${t("stock_low_stock_warning")} (${lowStockCount})`}
+                {filterLowStock ? t("inv_show_all") : `${t("inv_filter_low_stock")} (${lowStockCount})`}
               </Button>
             </div>
           </div>
@@ -244,9 +244,9 @@ export function InventoryClient({
       <Card className="shadow-sm border">
         <CardHeader className="flex flex-row items-center justify-between border-b pb-4 bg-muted/20">
           <div>
-            <CardTitle className="text-base font-semibold">Commodity Stock Ledger Balance</CardTitle>
+            <CardTitle className="text-base font-semibold">{t("inv_ledger_table_title")}</CardTitle>
             <CardDescription className="text-xs">
-              Single source of truth: stock level is the mathematical sum of all movements in grams.
+              {t("inv_ledger_table_desc")}
             </CardDescription>
           </div>
         </CardHeader>
@@ -255,13 +255,13 @@ export function InventoryClient({
             <table className="w-full text-left text-xs">
               <thead className="bg-muted/40 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider border-b">
                 <tr>
-                  <th className="px-5 py-3">Commodity</th>
-                  <th className="px-5 py-3">Category</th>
-                  <th className="px-5 py-3 text-right">On Hand (Display Unit)</th>
-                  <th className="px-5 py-3 text-right">Base Units (Grams)</th>
-                  <th className="px-5 py-3 text-right">Estimated Valuation</th>
-                  <th className="px-5 py-3 text-center">Status</th>
-                  <th className="px-5 py-3 text-right">Actions</th>
+                  <th className="px-5 py-3">{t("purch_commodity_col")}</th>
+                  <th className="px-5 py-3">{t("prod_category_col")}</th>
+                  <th className="px-5 py-3 text-right">{t("inv_on_hand_display")}</th>
+                  <th className="px-5 py-3 text-right">{t("inv_base_grams")}</th>
+                  <th className="px-5 py-3 text-right">{t("stock_current_valuation")}</th>
+                  <th className="px-5 py-3 text-center">{t("common_status")}</th>
+                  <th className="px-5 py-3 text-right">{t("common_actions")}</th>
                 </tr>
               </thead>
               <tbody className="divide-y">
@@ -305,14 +305,14 @@ export function InventoryClient({
                           size="sm"
                           onClick={() => openAdjustment(item)}
                           className="h-7 text-xs px-2"
-                          title="Record physical recount, spillage, or wastage"
+                          title={language === "am" ? "የቆጠራ፣ የፈሰሰ ወይም የባከነ እቃ መመዝገቢያ" : "Record physical recount, spillage, or wastage"}
                         >
                           <SlidersHorizontal className="h-3 w-3 mr-1 text-amber-600" />
                           {t("btn_adjust_stock")}
                         </Button>
                         <Link href={`/purchases/new`}>
                           <Button variant="ghost" size="sm" className="h-7 text-xs text-amber-700">
-                            + Stock-In
+                            + {t("btn_stock_in")}
                           </Button>
                         </Link>
                       </div>
@@ -334,7 +334,7 @@ export function InventoryClient({
               {t("stock_adjustment")}
             </DialogTitle>
             <DialogDescription>
-              Record physical audit counts, spillage, wastage, moisture loss, or inventory corrections.
+              {t("inv_adjust_modal_desc")}
             </DialogDescription>
           </DialogHeader>
 
@@ -348,11 +348,11 @@ export function InventoryClient({
             <form onSubmit={handleRecordAdjustment} className="space-y-4">
               <div className="p-3 bg-muted/40 rounded-lg border text-xs space-y-1">
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Commodity:</span>
+                  <span className="text-muted-foreground">{t("purch_commodity_col")}:</span>
                   <span className="font-semibold text-foreground">{selectedProduct.product_name}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Current Stock:</span>
+                  <span className="text-muted-foreground">{t("stock_on_hand")}:</span>
                   <span className="font-bold text-foreground">
                     {formatQuantity(selectedProduct.current_stock_default_unit, selectedProduct.default_unit_symbol || "")} ({formatQuantity(selectedProduct.current_stock_base_units, "g")})
                   </span>
@@ -361,7 +361,7 @@ export function InventoryClient({
 
               {/* Adjustment Direction */}
               <div className="space-y-1.5">
-                <Label className="text-xs font-semibold">Adjustment Type *</Label>
+                <Label className="text-xs font-semibold">{t("stock_adj_direction")}</Label>
                 <div className="grid grid-cols-2 gap-2">
                   <button
                     type="button"
@@ -373,7 +373,7 @@ export function InventoryClient({
                     }`}
                   >
                     <Minus className="h-4 w-4 text-red-600" />
-                    <span>Reduce Stock (Wastage/Loss)</span>
+                    <span>{t("stock_adj_reduce")}</span>
                   </button>
 
                   <button
@@ -386,7 +386,7 @@ export function InventoryClient({
                     }`}
                   >
                     <Plus className="h-4 w-4 text-emerald-600" />
-                    <span>Add Stock (Found / Audit)</span>
+                    <span>{t("stock_adj_add")}</span>
                   </button>
                 </div>
               </div>
@@ -395,7 +395,7 @@ export function InventoryClient({
               <div className="grid grid-cols-2 gap-2">
                 <div className="space-y-1">
                   <Label htmlFor="adjQty" className="text-xs font-semibold">
-                    Quantity *
+                    {t("stock_adj_qty")}
                   </Label>
                   <Input
                     id="adjQty"
@@ -411,7 +411,7 @@ export function InventoryClient({
 
                 <div className="space-y-1">
                   <Label htmlFor="adjUnit" className="text-xs font-semibold">
-                    Unit *
+                    {t("stock_adj_unit")}
                   </Label>
                   <select
                     id="adjUnit"
@@ -430,14 +430,14 @@ export function InventoryClient({
 
               {/* Reason Presets */}
               <div className="space-y-1.5">
-                <Label className="text-xs font-semibold">Common Reason Presets</Label>
+                <Label className="text-xs font-semibold">{t("inv_common_presets")}</Label>
                 <div className="flex flex-wrap gap-1 text-[11px]">
                   {[
                     t("stock_spillage"),
                     t("stock_recount"),
                     t("stock_damage"),
-                    "Bag puncture in transit",
-                    "Moisture / Dryness loss",
+                    t("inv_preset_bag_puncture"),
+                    t("inv_preset_moisture_loss"),
                   ].map((preset) => (
                     <button
                       key={preset}
@@ -458,7 +458,7 @@ export function InventoryClient({
                 </Label>
                 <Input
                   id="adjReason"
-                  placeholder="Explain why inventory is being adjusted..."
+                  placeholder={t("stock_adj_reason_placeholder")}
                   value={reason}
                   onChange={(e) => setReason(e.target.value)}
                   className="h-9 text-xs"
@@ -481,10 +481,10 @@ export function InventoryClient({
                 >
                   {submitting ? (
                     <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Recording...
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" /> {t("btn_processing")}
                     </>
                   ) : (
-                    "Apply Adjustment"
+                    t("btn_apply_adjustment")
                   )}
                 </Button>
               </DialogFooter>

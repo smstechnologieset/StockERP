@@ -48,12 +48,12 @@ interface POSRegisterProps {
 
 export function POSRegister({ products, units, stockView }: POSRegisterProps) {
   const router = useRouter();
-  const { t, isAmharic } = useLanguage();
+  const { t, isAmharic, language } = useLanguage();
 
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [cart, setCart] = useState<CartItem[]>([]);
-  const [customerName, setCustomerName] = useState("Walk-in Customer");
+  const [customerName, setCustomerName] = useState(language === "am" ? "የመጣ ደንበኛ" : "Walk-in Customer");
   const [customerPhone, setCustomerPhone] = useState("");
   const [paymentMethod, setPaymentMethod] = useState<
     "cash" | "telebirr" | "cbe_birr" | "bank_transfer" | "credit"
@@ -187,14 +187,20 @@ export function POSRegister({ products, units, stockView }: POSRegisterProps) {
 
     if (hasInsufficientStock && (!manualOverride || !overrideReason.trim())) {
       setErrorMessage(
-        "Some items exceed available on-hand stock. You must check 'Manual Stock Override' and provide a reason to proceed."
+        language === "am"
+          ? "አንዳንድ እቃዎች ካለው ክምችት በላይ ናቸው። ለመቀጠል 'ያለ ክምችት እንዲሸጥ ፈቅጃለሁ' የሚለውን ምልክት በማድረግ ምክንያት ማስገባት አለብዎት።"
+          : "Some items exceed available on-hand stock. You must check 'Manual Stock Override' and provide a reason to proceed."
       );
       return;
     }
 
     if (paymentMethod === "credit") {
-      if (!customerName || customerName.trim() === "" || customerName.trim().toLowerCase() === "walk-in customer") {
-        setErrorMessage("A specific Customer Full Name is required for Credit sales.");
+      if (!customerName || customerName.trim() === "" || customerName.trim().toLowerCase() === "walk-in customer" || customerName.trim() === "የመጣ ደንበኛ") {
+        setErrorMessage(
+          language === "am"
+            ? "በብድር ለሚደረግ ሽያጭ የደንበኛ ሙሉ ስም መግለጽ ግዴታ ነው።"
+            : "A specific Customer Full Name is required for Credit sales."
+        );
         return;
       }
     }
@@ -237,7 +243,7 @@ export function POSRegister({ products, units, stockView }: POSRegisterProps) {
       setDownPayment(0);
       setCreditNotes("");
     } else {
-      setErrorMessage(res.error || "Failed to complete sale.");
+      setErrorMessage(res.error || (language === "am" ? "ሽያጩን ማጠናቀቅ አልተቻለም።" : "Failed to complete sale."));
     }
     setLoading(false);
   }
@@ -248,10 +254,10 @@ export function POSRegister({ products, units, stockView }: POSRegisterProps) {
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold font-heading tracking-tight text-foreground sm:text-3xl">
-            Point of Sale (POS) Register
+            {t("pos_title")}
           </h1>
           <p className="text-sm text-muted-foreground">
-            Retail & wholesale grain sales counter. Automatically verifies stock and posts negative ledger movements.
+            {t("pos_subtitle")}
           </p>
         </div>
 
@@ -261,7 +267,7 @@ export function POSRegister({ products, units, stockView }: POSRegisterProps) {
             size="sm"
             onClick={() => router.push("/sales")}
           >
-            Sales History
+            {t("pos_sales_history_btn")}
           </Button>
         </div>
       </div>
@@ -276,20 +282,20 @@ export function POSRegister({ products, units, stockView }: POSRegisterProps) {
               </div>
               <div>
                 <h3 className="font-heading font-bold text-lg text-emerald-950 dark:text-emerald-200">
-                  {saleResult.isCredit ? "Credit Sale Recorded!" : "Sale Completed!"} Invoice #{saleResult.invoiceNumber}
+                  {saleResult.isCredit ? t("pos_credit_sale_recorded") : t("pos_sale_completed")} {t("pos_invoice_number")} #{saleResult.invoiceNumber}
                 </h3>
                 <p className="text-xs text-emerald-800 dark:text-emerald-300">
-                  Total ETB:{" "}
+                  {t("common_total")} ({t("currency_etb")}):{" "}
                   <strong className="font-mono text-base">
                     {formatETB(saleResult.totalAmount)}
                   </strong>{" "}
                   {saleResult.isCredit && (
                     <span className="font-semibold text-amber-800 dark:text-amber-300">
-                      &bull; Remaining Customer Credit Debt:{" "}
+                      &bull; {t("credit_remaining_balance")}:{" "}
                       <strong>{formatETB(saleResult.creditRemaining || 0)}</strong>
                     </span>
                   )}
-                  &bull; Stock ledger updated.
+                  &bull; {t("mov_table_desc")}
                 </p>
               </div>
             </div>
@@ -299,7 +305,7 @@ export function POSRegister({ products, units, stockView }: POSRegisterProps) {
                 size="sm"
                 onClick={() => setSaleResult(null)}
               >
-                New Order
+                {t("btn_new_order")}
               </Button>
               {saleResult.isCredit ? (
                 <Button
@@ -307,7 +313,7 @@ export function POSRegister({ products, units, stockView }: POSRegisterProps) {
                   className="bg-amber-600 hover:bg-amber-700 text-white"
                   onClick={() => router.push("/credit")}
                 >
-                  Manage Credit Accounts
+                  {t("btn_manage_credit")}
                 </Button>
               ) : (
                 <Button
@@ -315,7 +321,7 @@ export function POSRegister({ products, units, stockView }: POSRegisterProps) {
                   className="bg-amber-600 hover:bg-amber-700 text-white"
                   onClick={() => router.push("/sales")}
                 >
-                  View Sales Log
+                  {t("btn_view_sales_log")}
                 </Button>
               )}
             </div>
@@ -332,7 +338,7 @@ export function POSRegister({ products, units, stockView }: POSRegisterProps) {
             <div className="relative flex-1">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search grains, berbere, lentils..."
+                placeholder={t("pos_search_placeholder")}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="pl-9 h-9"
@@ -347,7 +353,7 @@ export function POSRegister({ products, units, stockView }: POSRegisterProps) {
                 onClick={() => setSelectedCategory("all")}
                 className="text-xs h-9 whitespace-nowrap"
               >
-                All
+                {t("btn_all")}
               </Button>
               {categories.map((c) => (
                 <Button
@@ -416,7 +422,7 @@ export function POSRegister({ products, units, stockView }: POSRegisterProps) {
                         onClick={() => addToCart(p)}
                         className="h-8 px-3 text-xs bg-amber-600 hover:bg-amber-700 text-white"
                       >
-                        <Plus className="h-3 w-3 mr-1" /> Add
+                        <Plus className="h-3 w-3 mr-1" /> {t("pos_add")}
                       </Button>
                     </div>
                   </CardContent>
@@ -433,10 +439,10 @@ export function POSRegister({ products, units, stockView }: POSRegisterProps) {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <ShoppingCart className="h-4 w-4 text-amber-600" />
-                  <CardTitle className="text-base font-semibold">Active Register</CardTitle>
+                  <CardTitle className="text-base font-semibold">{t("pos_active_register")}</CardTitle>
                 </div>
                 <Badge variant="outline" className="text-xs">
-                  {cart.length} Line Items
+                  {cart.length} {t("pos_line_items")}
                 </Badge>
               </div>
             </CardHeader>
@@ -543,15 +549,15 @@ export function POSRegister({ products, units, stockView }: POSRegisterProps) {
                       {/* Stock on-hand check indicator */}
                       <div className="flex items-center justify-between text-[10px]">
                         <span className="text-muted-foreground">
-                          Weight: {formatQuantity(itemGrams, "g")}
+                          {t("common_weight")}: {formatQuantity(itemGrams, "g")}
                         </span>
                         {isNegative ? (
                           <span className="text-red-600 font-bold flex items-center gap-1">
-                            <AlertTriangle className="h-3 w-3" /> Exceeds Stock ({formatQuantity(item.currentStockGrams, "g")} on hand)
+                            <AlertTriangle className="h-3 w-3" /> {t("common_exceeds_stock")} ({formatQuantity(item.currentStockGrams, "g")})
                           </span>
                         ) : (
                           <span className="text-emerald-700 dark:text-emerald-400">
-                            Available: {formatQuantity(item.currentStockGrams, "g")}
+                            {t("common_available")}: {formatQuantity(item.currentStockGrams, "g")}
                           </span>
                         )}
                       </div>
@@ -561,7 +567,7 @@ export function POSRegister({ products, units, stockView }: POSRegisterProps) {
 
                 {cart.length === 0 && (
                   <div className="py-12 text-center text-xs text-muted-foreground border border-dashed rounded-lg">
-                    Cart is empty. Select commodities from the left to begin.
+                    {t("pos_empty_cart_hint")}
                   </div>
                 )}
               </div>
@@ -571,10 +577,10 @@ export function POSRegister({ products, units, stockView }: POSRegisterProps) {
                 <div className="rounded-lg bg-amber-500/10 border border-amber-500/30 p-3 space-y-2 text-xs">
                   <div className="flex items-center gap-2 text-amber-800 dark:text-amber-300 font-semibold">
                     <AlertTriangle className="h-4 w-4 text-amber-600 shrink-0" />
-                    <span>Insufficient Stock Detected!</span>
+                    <span>{t("pos_insufficient_stock_banner")}</span>
                   </div>
                   <p className="text-[11px] text-muted-foreground">
-                    Items: <strong>{insufficientProducts.join(", ")}</strong> exceed on-hand balance. To complete this sale, an explicit manual override is required.
+                    {t("common_items_count")}: <strong>{insufficientProducts.join(", ")}</strong> {t("pos_insufficient_stock_desc")}
                   </p>
 
                   <div className="flex items-center gap-2 pt-1">
@@ -589,18 +595,18 @@ export function POSRegister({ products, units, stockView }: POSRegisterProps) {
                       htmlFor="manualOverride"
                       className="font-medium text-foreground cursor-pointer"
                     >
-                      Authorize Manual Stock Override
+                      {t("pos_override_badge")}
                     </label>
                   </div>
 
                   {manualOverride && (
                     <div className="space-y-1 pt-1">
                       <Label htmlFor="overrideReason" className="text-[11px]">
-                        Mandatory Override Reason *
+                        {t("pos_override_reason_label")}
                       </Label>
                       <Input
                         id="overrideReason"
-                        placeholder="e.g. Grain delivered this morning, entry pending in purchases..."
+                        placeholder={t("pos_override_reason_placeholder")}
                         value={overrideReason}
                         onChange={(e) => setOverrideReason(e.target.value)}
                         className="h-8 text-xs bg-background"
@@ -616,7 +622,7 @@ export function POSRegister({ products, units, stockView }: POSRegisterProps) {
                 <div className="grid grid-cols-2 gap-2">
                   <div className="space-y-1">
                     <Label htmlFor="customerName" className="text-xs">
-                      Customer Name
+                      {t("pos_customer_name")}
                     </Label>
                     <Input
                       id="customerName"
@@ -627,7 +633,7 @@ export function POSRegister({ products, units, stockView }: POSRegisterProps) {
                   </div>
                   <div className="space-y-1">
                     <Label htmlFor="customerPhone" className="text-xs">
-                      Phone Number
+                      {t("pos_phone_number")}
                     </Label>
                     <Input
                       id="customerPhone"
@@ -640,14 +646,14 @@ export function POSRegister({ products, units, stockView }: POSRegisterProps) {
                 </div>
 
                 <div className="space-y-1">
-                  <Label className="text-xs">Payment Method</Label>
+                  <Label className="text-xs">{t("pay_method")}</Label>
                   <div className="grid grid-cols-3 gap-1.5 text-xs">
                     {[
-                      { id: "cash", label: "Cash", icon: Banknote },
-                      { id: "telebirr", label: "Telebirr", icon: Smartphone },
-                      { id: "cbe_birr", label: "CBE Birr", icon: Smartphone },
-                      { id: "bank_transfer", label: "Bank Trf", icon: Building },
-                      { id: "credit", label: "Credit", icon: CreditCard },
+                      { id: "cash", label: t("pay_cash"), icon: Banknote },
+                      { id: "telebirr", label: t("pay_telebirr"), icon: Smartphone },
+                      { id: "cbe_birr", label: t("pay_cbe_birr"), icon: Smartphone },
+                      { id: "bank_transfer", label: t("pay_bank_transfer"), icon: Building },
+                      { id: "credit", label: t("pay_credit"), icon: CreditCard },
                     ].map((m) => {
                       const Icon = m.icon;
                       const isSelected = paymentMethod === m.id;
@@ -734,7 +740,7 @@ export function POSRegister({ products, units, stockView }: POSRegisterProps) {
                     {downPayment > 0 && (
                       <div className="space-y-1">
                         <Label className="text-[11px] font-medium">
-                          Down Payment Method
+                          {t("pos_down_payment_method")}
                         </Label>
                         <div className="grid grid-cols-4 gap-1 text-[11px]">
                           {(["cash", "telebirr", "cbe_birr", "bank_transfer"] as const).map((m) => (
@@ -748,7 +754,13 @@ export function POSRegister({ products, units, stockView }: POSRegisterProps) {
                                   : "bg-background text-muted-foreground"
                               }`}
                             >
-                              {m === "bank_transfer" ? "Bank" : m === "cbe_birr" ? "CBE" : m}
+                              {m === "bank_transfer"
+                                ? (language === "am" ? "ባንክ" : "Bank")
+                                : m === "cbe_birr"
+                                ? (language === "am" ? "ሲቢኢ" : "CBE")
+                                : m === "telebirr"
+                                ? (language === "am" ? "ቴሌብር" : "Telebirr")
+                                : (language === "am" ? "ጥሬ ገንዘብ" : "Cash")}
                             </button>
                           ))}
                         </div>
@@ -777,7 +789,11 @@ export function POSRegister({ products, units, stockView }: POSRegisterProps) {
                       </Label>
                       <Input
                         id="creditNotes"
-                        placeholder="e.g. Agreement to pay in 2 installments / Guarantor name..."
+                        placeholder={
+                          language === "am"
+                            ? "ምሳሌ፡ በ2 ዙር ለመክፈል የተደረገ ስምምነት / የዋስ ስም..."
+                            : "e.g. Agreement to pay in 2 installments / Guarantor name..."
+                        }
                         value={creditNotes}
                         onChange={(e) => setCreditNotes(e.target.value)}
                         className="h-8 text-xs bg-background"
@@ -791,7 +807,7 @@ export function POSRegister({ products, units, stockView }: POSRegisterProps) {
               <div className="pt-3 border-t space-y-3">
                 <div className="flex justify-between items-baseline">
                   <span className="text-sm font-semibold text-muted-foreground">
-                    Total Due:
+                    {t("pos_total_due")}:
                   </span>
                   <span className="text-2xl font-bold font-heading text-amber-600">
                     {formatETB(cartTotal)}
@@ -806,11 +822,11 @@ export function POSRegister({ products, units, stockView }: POSRegisterProps) {
                 >
                   {loading ? (
                     <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Processing Sale...
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" /> {t("pos_processing_sale")}
                     </>
                   ) : (
                     <>
-                      <Receipt className="mr-2 h-4 w-4" /> Complete Sale ({formatETB(cartTotal)})
+                      <Receipt className="mr-2 h-4 w-4" /> {t("pos_complete_btn")} ({formatETB(cartTotal)})
                     </>
                   )}
                 </Button>

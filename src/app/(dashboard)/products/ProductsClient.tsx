@@ -128,7 +128,7 @@ export function ProductsClient({
             className="flex items-center gap-1 font-semibold text-foreground hover:text-amber-600 transition-colors"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
           >
-            Commodity Name
+            {t("prod_name_col")}
             <ArrowUpDown className="h-3.5 w-3.5" />
           </button>
         ),
@@ -144,7 +144,7 @@ export function ProductsClient({
         ),
       }),
       columnHelper.accessor("category", {
-        header: "Category",
+        header: t("prod_category_col"),
         cell: (info) => (
           <Badge variant="secondary" className="text-xs">
             {info.getValue()}
@@ -152,7 +152,7 @@ export function ProductsClient({
         ),
       }),
       columnHelper.accessor("default_unit", {
-        header: "Default Unit",
+        header: t("prod_unit_col"),
         cell: (info) => {
           const unit = info.getValue();
           return (
@@ -164,7 +164,7 @@ export function ProductsClient({
         },
       }),
       columnHelper.accessor("cost_price_per_base_unit", {
-        header: "Cost Price (ETB)",
+        header: `${t("prod_cost_col")} (${t("currency_etb")})`,
         cell: (info) => {
           const unit = info.row.original.default_unit;
           const factor = unit?.conversion_factor || 1;
@@ -183,7 +183,7 @@ export function ProductsClient({
         },
       }),
       columnHelper.accessor("selling_price_per_base_unit", {
-        header: "Selling Price (ETB)",
+        header: `${t("prod_sell_col")} (${t("currency_etb")})`,
         cell: (info) => {
           const unit = info.row.original.default_unit;
           const factor = unit?.conversion_factor || 1;
@@ -202,7 +202,7 @@ export function ProductsClient({
         },
       }),
       columnHelper.accessor("reorder_threshold_base_units", {
-        header: "Reorder Alert",
+        header: t("prod_reorder_col"),
         cell: (info) => {
           const unit = info.row.original.default_unit;
           const factor = unit?.conversion_factor || 1;
@@ -220,19 +220,19 @@ export function ProductsClient({
         },
       }),
       columnHelper.accessor("is_active", {
-        header: "Status",
+        header: t("common_status"),
         cell: (info) => (
           <Badge
             variant={info.getValue() ? "success" : "outline"}
             className="text-[10px]"
           >
-            {info.getValue() ? "Active" : "Archived"}
+            {info.getValue() ? t("prod_active") : t("prod_archived")}
           </Badge>
         ),
       }),
       columnHelper.display({
         id: "actions",
-        header: "Actions",
+        header: t("common_actions"),
         cell: (info) => {
           if (!isManager) return null;
           const product = info.row.original;
@@ -248,7 +248,7 @@ export function ProductsClient({
                 className="h-7 px-2 text-muted-foreground hover:text-foreground"
                 title="Edit product details"
               >
-                <Edit className="h-3.5 w-3.5 mr-1" /> Edit
+                <Edit className="h-3.5 w-3.5 mr-1" /> {t("btn_edit")}
               </Button>
 
               <Button
@@ -364,7 +364,7 @@ export function ProductsClient({
                   onClick={() => setStatusFilter("active")}
                   className="h-8 text-xs"
                 >
-                  Active
+                  {t("btn_active")}
                 </Button>
                 <Button
                   variant={statusFilter === "archived" ? "default" : "outline"}
@@ -372,7 +372,7 @@ export function ProductsClient({
                   onClick={() => setStatusFilter("archived")}
                   className="h-8 text-xs"
                 >
-                  Archived
+                  {t("btn_archived")}
                 </Button>
                 <Button
                   variant={statusFilter === "all" ? "default" : "outline"}
@@ -390,7 +390,7 @@ export function ProductsClient({
                 onChange={(e) => setSelectedCategory(e.target.value)}
                 className="h-8 rounded-md border border-input bg-background px-2 py-1 text-xs shadow-sm"
               >
-                <option value="all">All Categories ({data.length})</option>
+                <option value="all">{t("cat_all")} ({data.length})</option>
                 {categories.map((c) => (
                   <option key={c} value={c}>
                     {c}
@@ -508,17 +508,17 @@ export function ProductsClient({
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-red-600">
               <Trash2 className="h-5 w-5" />
-              Delete / Archive Commodity
+              {t("prod_delete_title")}
             </DialogTitle>
             <DialogDescription>
-              Are you sure you want to remove <strong>{productToDelete?.name}</strong>?
+              {t("prod_delete_desc")}: <strong>{productToDelete?.name}</strong>?
             </DialogDescription>
           </DialogHeader>
 
           <div className="text-xs text-muted-foreground p-3 rounded-lg bg-amber-500/10 border border-amber-500/20 space-y-1.5">
             <p className="font-semibold text-foreground">Audit Protection Rule:</p>
             <p>
-              If this commodity already has historical sales invoices or inventory ledger movements, the system will <strong>safely archive</strong> it (hiding it from POS sales) rather than permanently deleting it. This protects your financial and inventory records.
+              {t("prod_delete_audit_rule")}
             </p>
           </div>
 
@@ -537,10 +537,10 @@ export function ProductsClient({
             >
               {deleting ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Processing...
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" /> {t("btn_processing")}
                 </>
               ) : (
-                "Confirm Removal"
+                t("btn_confirm_removal")
               )}
             </Button>
           </DialogFooter>

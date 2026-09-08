@@ -107,11 +107,15 @@ export function PricingClient({ initialProducts }: PricingClientProps) {
         ...prev,
         [product.id]: { ...row, isDirty: false },
       }));
-      setSuccessNotice(`Prices updated successfully for ${product.name}!`);
+      setSuccessNotice(
+        isAmharic
+          ? `ለ${product.name} ዋጋዎች በተሳካ ሁኔታ ተስተካክለዋል!`
+          : `Prices updated successfully for ${product.name}!`
+      );
       setTimeout(() => setSuccessNotice(null), 4000);
       router.refresh();
     } else {
-      setErrorNotice(res.error || "Failed to update prices.");
+      setErrorNotice(res.error || (isAmharic ? "ዋጋዎችን ማስተካከል አልተቻለም።" : "Failed to update prices."));
     }
     setSavingId(null);
   }
@@ -147,11 +151,15 @@ export function PricingClient({ initialProducts }: PricingClientProps) {
         });
         return next;
       });
-      setSuccessNotice(`Updated prices for ${updates.length} commodities!`);
+      setSuccessNotice(
+        isAmharic
+          ? `ለ${updates.length} እህሎች ዋጋዎች በተሳካ ሁኔታ ተስተካክለዋል!`
+          : `Updated prices for ${updates.length} commodities!`
+      );
       setTimeout(() => setSuccessNotice(null), 4000);
       router.refresh();
     } else {
-      setErrorNotice(res.error || "Failed to batch update prices.");
+      setErrorNotice(res.error || (isAmharic ? "ዋጋዎችን ማስተካከል አልተቻለም።" : "Failed to batch update prices."));
     }
     setSavingAll(false);
   }
@@ -165,12 +173,10 @@ export function PricingClient({ initialProducts }: PricingClientProps) {
         <div>
           <h1 className="text-2xl font-bold font-heading tracking-tight text-foreground sm:text-3xl flex items-center gap-2.5">
             <Tag className="h-7 w-7 text-amber-600" />
-            {t("nav_pricing")} (Cost & Selling Prices)
+            {t("pricing_page_title")}
           </h1>
           <p className="text-sm text-muted-foreground">
-            {isAmharic
-              ? "የእህልና የዱቄት መግዣ እና መሸጫ ዋጋን በቀላሉ ማስተካከያ እና የትርፍ ህዳግ ማስያ"
-              : "Rapidly adjust procurement cost and retail selling prices with real-time margin calculations."}
+            {t("pricing_page_subtitle")}
           </p>
         </div>
 
@@ -217,7 +223,7 @@ export function PricingClient({ initialProducts }: PricingClientProps) {
           <div className="relative max-w-md">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Search by commodity name, SKU, or category..."
+              placeholder={isAmharic ? "በእህል ስም፣ ኮድ፣ ወይም ምድብ ፈልግ..." : "Search by commodity name, SKU, or category..."}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="pl-9 h-9 text-xs"
@@ -230,10 +236,10 @@ export function PricingClient({ initialProducts }: PricingClientProps) {
       <Card className="border shadow-sm">
         <CardHeader className="border-b pb-4 bg-muted/20">
           <CardTitle className="text-base font-semibold">
-            Commodity Pricing Roster ({filteredProducts.length})
+            {t("pricing_roster_title")} ({filteredProducts.length})
           </CardTitle>
           <CardDescription className="text-xs">
-            Edit cost or selling price in the commodity's standard trade unit. Changes normalize to base grams automatically.
+            {t("pricing_roster_desc")}
           </CardDescription>
         </CardHeader>
         <CardContent className="p-0">
@@ -241,13 +247,13 @@ export function PricingClient({ initialProducts }: PricingClientProps) {
             <table className="w-full text-left text-xs">
               <thead className="bg-muted/40 uppercase tracking-wider text-[11px] font-semibold text-muted-foreground border-b">
                 <tr>
-                  <th className="px-5 py-3">Commodity</th>
-                  <th className="px-5 py-3">Trade Unit</th>
-                  <th className="px-5 py-3 text-right">Cost Price (ETB)</th>
-                  <th className="px-5 py-3 text-right">Selling Price (ETB)</th>
-                  <th className="px-5 py-3 text-right">Gross Margin</th>
-                  <th className="px-5 py-3 text-center">Margin %</th>
-                  <th className="px-5 py-3 text-right">Action</th>
+                  <th className="px-5 py-3">{isAmharic ? "እህል / ምርት" : "Commodity"}</th>
+                  <th className="px-5 py-3">{t("pricing_trade_unit")}</th>
+                  <th className="px-5 py-3 text-right">{t("prod_cost_col")}</th>
+                  <th className="px-5 py-3 text-right">{t("prod_sell_col")}</th>
+                  <th className="px-5 py-3 text-right">{t("pricing_gross_margin")}</th>
+                  <th className="px-5 py-3 text-center">{t("pricing_margin_pct")}</th>
+                  <th className="px-5 py-3 text-right">{t("common_actions")}</th>
                 </tr>
               </thead>
               <tbody className="divide-y">

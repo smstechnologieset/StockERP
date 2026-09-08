@@ -10,6 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { UnitFormModal } from "@/components/units/UnitFormModal";
 import type { Unit } from "@/types/database";
 import { useRouter } from "next/navigation";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
 
 interface UnitsClientProps {
   initialUnits: Unit[];
@@ -18,6 +19,7 @@ interface UnitsClientProps {
 
 export function UnitsClient({ initialUnits, isManager }: UnitsClientProps) {
   const router = useRouter();
+  const { t } = useLanguage();
   const [units] = useState(initialUnits);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingUnit, setEditingUnit] = useState<Unit | null>(null);
@@ -37,10 +39,10 @@ export function UnitsClient({ initialUnits, isManager }: UnitsClientProps) {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold font-heading tracking-tight text-foreground sm:text-3xl">
-            Measurement Units & Conversion
+            {t("unit_page_title")}
           </h1>
           <p className="text-sm text-muted-foreground">
-            All transactions and ledger movements normalize into the Base Unit: <strong>Grams (g)</strong>.
+            {t("unit_page_subtitle")}
           </p>
         </div>
 
@@ -52,7 +54,7 @@ export function UnitsClient({ initialUnits, isManager }: UnitsClientProps) {
             }}
             className="gap-2 bg-amber-600 hover:bg-amber-700 text-white shadow-sm"
           >
-            <Plus className="h-4 w-4" /> Add Custom Unit
+            <Plus className="h-4 w-4" /> {t("unit_add_custom")}
           </Button>
         )}
       </div>
@@ -63,17 +65,17 @@ export function UnitsClient({ initialUnits, isManager }: UnitsClientProps) {
           <div className="flex items-center gap-2">
             <Calculator className="h-5 w-5 text-amber-600" />
             <CardTitle className="text-base font-bold text-foreground">
-              Live Commodity Unit Converter
+              {t("unit_calc_title")}
             </CardTitle>
           </div>
           <CardDescription className="text-xs">
-            Test how different trading units translate into base grams and retail measures.
+            {t("unit_calc_desc")}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end mb-6">
             <div className="space-y-1.5">
-              <Label htmlFor="calcQty">Quantity</Label>
+              <Label htmlFor="calcQty">{t("unit_calc_qty")}</Label>
               <Input
                 id="calcQty"
                 type="number"
@@ -83,7 +85,7 @@ export function UnitsClient({ initialUnits, isManager }: UnitsClientProps) {
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="calcUnit">Select Input Unit</Label>
+              <Label htmlFor="calcUnit">{t("unit_calc_select_unit")}</Label>
               <select
                 id="calcUnit"
                 value={calcUnitId}
@@ -98,7 +100,7 @@ export function UnitsClient({ initialUnits, isManager }: UnitsClientProps) {
               </select>
             </div>
             <div className="rounded-lg bg-background p-2.5 border text-center">
-              <span className="text-xs text-muted-foreground block">Base Unit Equivalent</span>
+              <span className="text-xs text-muted-foreground block">{t("unit_calc_base_grams")}</span>
               <span className="text-lg font-bold font-mono text-amber-600">
                 {gramsTotal.toLocaleString()} g
               </span>
@@ -133,9 +135,9 @@ export function UnitsClient({ initialUnits, isManager }: UnitsClientProps) {
       {/* Units Table */}
       <Card className="shadow-sm border">
         <CardHeader className="border-b pb-4">
-          <CardTitle className="text-lg">Configured Measurement Units</CardTitle>
+          <CardTitle className="text-lg">{t("unit_math_card_title")}</CardTitle>
           <CardDescription className="text-xs">
-            Units available in Point of Sale, Purchases, and Product specifications.
+            {t("unit_math_card_desc")}
           </CardDescription>
         </CardHeader>
         <CardContent className="p-0">
@@ -143,11 +145,11 @@ export function UnitsClient({ initialUnits, isManager }: UnitsClientProps) {
             <table className="w-full text-left text-sm">
               <thead className="bg-muted/40 text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b">
                 <tr>
-                  <th className="px-6 py-3.5">Unit Name</th>
-                  <th className="px-6 py-3.5">Symbol</th>
-                  <th className="px-6 py-3.5 text-right">Conversion Factor (Grams)</th>
-                  <th className="px-6 py-3.5 text-center">Base Unit Status</th>
-                  <th className="px-6 py-3.5 text-right">Action</th>
+                  <th className="px-6 py-3.5">{t("unit_name_col")}</th>
+                  <th className="px-6 py-3.5">{t("unit_symbol_col")}</th>
+                  <th className="px-6 py-3.5 text-right">{t("unit_factor_col")}</th>
+                  <th className="px-6 py-3.5 text-center">{t("common_status")}</th>
+                  <th className="px-6 py-3.5 text-right">{t("common_actions")}</th>
                 </tr>
               </thead>
               <tbody className="divide-y">
@@ -165,11 +167,11 @@ export function UnitsClient({ initialUnits, isManager }: UnitsClientProps) {
                     <td className="px-6 py-4 text-center">
                       {u.is_base_unit ? (
                         <Badge variant="success" className="gap-1 text-[10px]">
-                          <CheckCircle2 className="h-3 w-3" /> Base Unit (Grams)
+                          <CheckCircle2 className="h-3 w-3" /> {t("unit_base_badge")}
                         </Badge>
                       ) : (
                         <Badge variant="secondary" className="text-[10px]">
-                          Derived Unit
+                          {u.name}
                         </Badge>
                       )}
                     </td>
@@ -184,7 +186,7 @@ export function UnitsClient({ initialUnits, isManager }: UnitsClientProps) {
                           }}
                           className="h-8 px-2 text-muted-foreground hover:text-foreground"
                         >
-                          <Edit className="h-3.5 w-3.5 mr-1" /> Edit
+                          <Edit className="h-3.5 w-3.5 mr-1" /> {t("btn_edit")}
                         </Button>
                       )}
                     </td>
@@ -206,3 +208,4 @@ export function UnitsClient({ initialUnits, isManager }: UnitsClientProps) {
     </div>
   );
 }
+

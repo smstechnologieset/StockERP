@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { createClient } from "@/lib/supabase/client";
 import { Loader2, Scale } from "lucide-react";
 import type { Unit } from "@/types/database";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
 
 interface UnitFormModalProps {
   open: boolean;
@@ -28,6 +29,7 @@ export function UnitFormModal({
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const supabase = createClient();
+  const { t, language } = useLanguage();
 
   const {
     register,
@@ -44,8 +46,8 @@ export function UnitFormModal({
     },
   });
 
-  const unitName = watch("name") || "Unit";
-  const unitSymbol = watch("symbol") || "unit";
+  const unitName = watch("name") || (language === "am" ? "መለኪያ" : "Unit");
+  const unitSymbol = watch("symbol") || (language === "am" ? "ምልክት" : "unit");
   const factor = watch("conversion_factor") || 0;
 
   async function onSubmit(data: UnitFormValues) {
@@ -79,7 +81,7 @@ export function UnitFormModal({
       reset();
       onSuccess();
     } catch (err: any) {
-      setErrorMessage(err.message || "Failed to save unit.");
+      setErrorMessage(err.message || (language === "am" ? "መለኪያውን ማስቀመጥ አልተቻለም።" : "Failed to save unit."));
     } finally {
       setLoading(false);
     }
@@ -90,10 +92,10 @@ export function UnitFormModal({
       <DialogContent onClose={() => onOpenChange(false)}>
         <DialogHeader>
           <DialogTitle>
-            {unitToEdit ? "Edit Measurement Unit" : "Add Measurement Unit"}
+            {unitToEdit ? t("unit_modal_edit_title") : t("unit_modal_add_title")}
           </DialogTitle>
           <DialogDescription>
-            Define a packaging or bulk unit and how many grams equal 1 of this unit.
+            {t("unit_modal_desc")}
           </DialogDescription>
         </DialogHeader>
 
@@ -105,10 +107,10 @@ export function UnitFormModal({
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-1.5">
-            <Label htmlFor="name">Unit Name *</Label>
+            <Label htmlFor="name">{t("unit_name_label")}</Label>
             <Input
               id="name"
-              placeholder="e.g. 500g Pouch, 25kg Sack, Half Quintal"
+              placeholder={language === "am" ? "ምሳሌ፡ 500ግ ፓኬት፣ 25ኪ.ግ ጆንያ፣ ግማሽ ኩንታል" : "e.g. 500g Pouch, 25kg Sack, Half Quintal"}
               {...register("name")}
             />
             {errors.name && (
@@ -117,10 +119,10 @@ export function UnitFormModal({
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="symbol">Symbol / Code *</Label>
+            <Label htmlFor="symbol">{t("unit_symbol_label")}</Label>
             <Input
               id="symbol"
-              placeholder="e.g. pouch-500g, sack-25kg, h-q"
+              placeholder={language === "am" ? "ምሳሌ፡ pouch-500g, sack-25kg, h-q" : "e.g. pouch-500g, sack-25kg, h-q"}
               {...register("symbol")}
             />
             {errors.symbol && (
@@ -130,13 +132,13 @@ export function UnitFormModal({
 
           <div className="space-y-1.5">
             <Label htmlFor="conversion_factor">
-              Equivalent in Base Unit (Grams) *
+              {t("unit_factor_label")}
             </Label>
             <Input
               id="conversion_factor"
               type="number"
               step="any"
-              placeholder="e.g. 500 for 500g pouch, 50000 for 50kg sack"
+              placeholder={language === "am" ? "ምሳሌ፡ 500 ለ500ግ፣ 50000 ለ50ኪ.ግ ጆንያ" : "e.g. 500 for 500g pouch, 50000 for 50kg sack"}
               {...register("conversion_factor")}
             />
             {errors.conversion_factor && (
@@ -153,10 +155,12 @@ export function UnitFormModal({
             </div>
             <div className="text-xs">
               <p className="font-semibold text-foreground">
-                1 {unitName} ({unitSymbol}) = {Number(factor).toLocaleString()} Grams (g)
+                1 {unitName} ({unitSymbol}) = {Number(factor).toLocaleString()} {language === "am" ? "ግራም (g)" : "Grams (g)"}
               </p>
               <p className="text-[11px] text-muted-foreground mt-0.5">
-                Every sale or purchase recorded in this unit will convert into {Number(factor).toLocaleString()} grams in the stock ledger.
+                {language === "am"
+                  ? `በዚህ መለኪያ የሚመዘገብ ማንኛውም ሽያጭ ወይም ግዢ በክምችት መዝገቡ ላይ ወደ ${Number(factor).toLocaleString()} ግራም ይቀየራል።`
+                  : `Every sale or purchase recorded in this unit will convert into ${Number(factor).toLocaleString()} grams in the stock ledger.`}
               </p>
             </div>
           </div>
@@ -167,7 +171,7 @@ export function UnitFormModal({
               variant="outline"
               onClick={() => onOpenChange(false)}
             >
-              Cancel
+              {t("btn_cancel")}
             </Button>
             <Button
               type="submit"
@@ -176,12 +180,12 @@ export function UnitFormModal({
             >
               {loading ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving...
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" /> {language === "am" ? "በማስቀመጥ ላይ..." : "Saving..."}
                 </>
               ) : unitToEdit ? (
-                "Update Unit"
+                language === "am" ? "መለኪያ አዘምን" : "Update Unit"
               ) : (
-                "Add Unit"
+                language === "am" ? "መለኪያ መዝግብ" : "Add Unit"
               )}
             </Button>
           </DialogFooter>

@@ -123,7 +123,7 @@ export function MovementsClient({ initialMovements, error }: MovementsClientProp
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" onClick={exportCSV} className="gap-1.5 text-xs">
             <FileSpreadsheet className="h-3.5 w-3.5 text-emerald-600" />
-            Export CSV
+            {t("btn_export_csv")}
           </Button>
           <Link href="/purchases/new">
             <Button size="sm" className="bg-amber-600 hover:bg-amber-700 text-white shadow-sm text-xs">
@@ -144,22 +144,24 @@ export function MovementsClient({ initialMovements, error }: MovementsClientProp
         <Card className="border-emerald-600/30 bg-emerald-50/10 dark:bg-emerald-950/10">
           <CardHeader className="pb-2">
             <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center justify-between">
-              <span>{t("stock_inbound")} Events</span>
+              <span>{t("stock_inbound")} {isAmharic ? "እንቅስቃሴዎች" : "Events"}</span>
               <ArrowDownLeft className="h-4 w-4 text-emerald-600" />
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-emerald-700 dark:text-emerald-300">
-              {metrics.inboundCount} Movements
+              {metrics.inboundCount} {isAmharic ? "እንቅስቃሴዎች" : "Movements"}
             </div>
-            <p className="text-xs text-muted-foreground mt-1">Purchases & positive adjustments</p>
+            <p className="text-xs text-muted-foreground mt-1">
+              {isAmharic ? "ግዢዎች እና የተጨመሩ እቃዎች" : "Purchases & positive adjustments"}
+            </p>
           </CardContent>
         </Card>
 
         <Card className="border-emerald-600/30 bg-card">
           <CardHeader className="pb-2">
             <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Total Inbound Mass
+              {t("mov_inbound_mass")}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -175,22 +177,24 @@ export function MovementsClient({ initialMovements, error }: MovementsClientProp
         <Card className="border-red-500/30 bg-red-50/10 dark:bg-red-950/10">
           <CardHeader className="pb-2">
             <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center justify-between">
-              <span>{t("stock_outbound")} Events</span>
+              <span>{t("stock_outbound")} {isAmharic ? "እንቅስቃሴዎች" : "Events"}</span>
               <ArrowUpRight className="h-4 w-4 text-red-600" />
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-red-600">
-              {metrics.outboundCount} Movements
+              {metrics.outboundCount} {isAmharic ? "እንቅስቃሴዎች" : "Movements"}
             </div>
-            <p className="text-xs text-muted-foreground mt-1">Sales & spillage/wastage</p>
+            <p className="text-xs text-muted-foreground mt-1">
+              {isAmharic ? "ሽያጮች እና የፈሰሰ/የባከነ" : "Sales & spillage/wastage"}
+            </p>
           </CardContent>
         </Card>
 
         <Card className="border-red-500/30 bg-card">
           <CardHeader className="pb-2">
             <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Total Outbound Mass
+              {t("mov_outbound_mass")}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -211,7 +215,7 @@ export function MovementsClient({ initialMovements, error }: MovementsClientProp
             <div className="relative flex-1 max-w-md">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search by commodity, code, invoice #, or note..."
+                placeholder={isAmharic ? "በእህል ስም፣ ኮድ፣ ደረሰኝ ወይም ማስታወሻ ፈልግ..." : "Search by commodity, code, invoice #, or note..."}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="pl-9 h-9 text-xs"
@@ -254,10 +258,10 @@ export function MovementsClient({ initialMovements, error }: MovementsClientProp
       <Card className="border shadow-sm">
         <CardHeader className="border-b pb-4 bg-muted/20">
           <CardTitle className="text-base font-semibold">
-            Stock Ledger Movements ({filteredMovements.length})
+            {t("mov_table_title")} ({filteredMovements.length})
           </CardTitle>
           <CardDescription className="text-xs">
-            Append-only physical stock transactions with strict sign-based flow.
+            {t("mov_table_desc")}
           </CardDescription>
         </CardHeader>
         <CardContent className="p-0">
@@ -265,13 +269,13 @@ export function MovementsClient({ initialMovements, error }: MovementsClientProp
             <table className="w-full text-left text-xs">
               <thead className="bg-muted/40 uppercase tracking-wider text-[11px] font-semibold text-muted-foreground border-b">
                 <tr>
-                  <th className="px-5 py-3">Timestamp</th>
-                  <th className="px-5 py-3">Commodity</th>
-                  <th className="px-5 py-3 text-center">Direction</th>
-                  <th className="px-5 py-3 text-right">Quantity</th>
-                  <th className="px-5 py-3 text-right">Base Units (Grams)</th>
-                  <th className="px-5 py-3">Type & Reference</th>
-                  <th className="px-5 py-3">Reason / Audit Notes</th>
+                  <th className="px-5 py-3">{t("mov_timestamp")}</th>
+                  <th className="px-5 py-3">{isAmharic ? "እህል / ምርት" : "Commodity"}</th>
+                  <th className="px-5 py-3 text-center">{t("mov_direction")}</th>
+                  <th className="px-5 py-3 text-right">{t("common_quantity")}</th>
+                  <th className="px-5 py-3 text-right">{t("inv_base_grams")}</th>
+                  <th className="px-5 py-3">{t("mov_type_ref")}</th>
+                  <th className="px-5 py-3">{t("mov_audit_notes")}</th>
                 </tr>
               </thead>
               <tbody className="divide-y">
@@ -287,7 +291,7 @@ export function MovementsClient({ initialMovements, error }: MovementsClientProp
 
                       <td className="px-5 py-3.5">
                         <div className="font-semibold text-foreground text-sm">
-                          {m.product?.name || "Commodity"}
+                          {m.product?.name || (isAmharic ? "እህል" : "Commodity")}
                         </div>
                         {m.product?.category && (
                           <div className="text-[10px] text-muted-foreground">
@@ -299,11 +303,11 @@ export function MovementsClient({ initialMovements, error }: MovementsClientProp
                       <td className="px-5 py-3.5 text-center">
                         {isInbound ? (
                           <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold text-emerald-700 dark:text-emerald-300 border border-emerald-500/20">
-                            <ArrowDownLeft className="h-3 w-3 text-emerald-600" /> INBOUND
+                            <ArrowDownLeft className="h-3 w-3 text-emerald-600" /> {isAmharic ? "ገቢ" : "INBOUND"}
                           </span>
                         ) : (
                           <span className="inline-flex items-center gap-1 rounded-full bg-red-500/10 px-2 py-0.5 text-[10px] font-semibold text-red-600 dark:text-red-400 border border-red-500/20">
-                            <ArrowUpRight className="h-3 w-3 text-red-600" /> OUTBOUND
+                            <ArrowUpRight className="h-3 w-3 text-red-600" /> {isAmharic ? "ወጪ" : "OUTBOUND"}
                           </span>
                         )}
                       </td>
@@ -328,7 +332,7 @@ export function MovementsClient({ initialMovements, error }: MovementsClientProp
                       </td>
 
                       <td className="px-5 py-3.5 text-muted-foreground max-w-xs truncate">
-                        {m.override_reason || m.notes || "Standard ledger transaction"}
+                        {m.override_reason || m.notes || (isAmharic ? "የተለመደ የክምችት ዝውውር" : "Standard ledger transaction")}
                       </td>
                     </tr>
                   );
@@ -337,7 +341,7 @@ export function MovementsClient({ initialMovements, error }: MovementsClientProp
                 {filteredMovements.length === 0 && (
                   <tr>
                     <td colSpan={7} className="h-32 text-center text-muted-foreground">
-                      No stock movements found.
+                      {isAmharic ? "ምንም የእቃ እንቅስቃሴ አልተገኘም።" : "No stock movements found."}
                     </td>
                   </tr>
                 )}

@@ -156,7 +156,7 @@ export function Sidebar({
           </div>
           <button
             onClick={handleSignOut}
-            title="Sign Out"
+            title={t("nav_sign_out")}
             className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:bg-red-50 hover:text-red-600 transition-colors"
           >
             <LogOut className="h-4 w-4" />

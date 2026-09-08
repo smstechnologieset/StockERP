@@ -14,6 +14,7 @@ import { createClient } from "@/lib/supabase/client";
 import { formatETB } from "@/lib/utils";
 import { Loader2, Calculator } from "lucide-react";
 import type { Unit, Product } from "@/types/database";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
 
 interface ProductFormModalProps {
   open: boolean;
@@ -30,6 +31,7 @@ export function ProductFormModal({
   productToEdit,
   onSuccess,
 }: ProductFormModalProps) {
+  const { t, language } = useLanguage();
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const supabase = createClient();
@@ -115,7 +117,7 @@ export function ProductFormModal({
       reset();
       onSuccess();
     } catch (err: any) {
-      setErrorMessage(err.message || "Failed to save product.");
+      setErrorMessage(err.message || (language === "am" ? "ምርቱን ማስቀመጥ አልተቻለም።" : "Failed to save product."));
     } finally {
       setLoading(false);
     }
@@ -126,10 +128,10 @@ export function ProductFormModal({
       <DialogContent className="max-w-xl" onClose={() => onOpenChange(false)}>
         <DialogHeader>
           <DialogTitle>
-            {productToEdit ? "Edit Commodity Product" : "Add New Commodity Product"}
+            {productToEdit ? t("prod_modal_edit_title") : t("prod_modal_add_title")}
           </DialogTitle>
           <DialogDescription>
-            Enter commodity details and pricing. Prices and thresholds convert to base grams automatically.
+            {t("prod_modal_desc")}
           </DialogDescription>
         </DialogHeader>
 
@@ -142,10 +144,10 @@ export function ProductFormModal({
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <Label htmlFor="name">Product Name *</Label>
+              <Label htmlFor="name">{t("prod_name_label")}</Label>
               <Input
                 id="name"
-                placeholder="e.g. Berbere Special Grade 1"
+                placeholder={language === "am" ? "ምሳሌ፡ ልዩ የባሌ በርበሬ አንደኛ ደረጃ" : "e.g. Berbere Special Grade 1"}
                 {...register("name")}
               />
               {errors.name && (
@@ -154,10 +156,10 @@ export function ProductFormModal({
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="code">Code / SKU</Label>
+              <Label htmlFor="code">{t("prod_code_label")}</Label>
               <Input
                 id="code"
-                placeholder="e.g. BER-001 or WHT-Q"
+                placeholder={language === "am" ? "ምሳሌ፡ BER-001 ወይም WHT-Q" : "e.g. BER-001 or WHT-Q"}
                 {...register("code")}
               />
             </div>
@@ -165,22 +167,22 @@ export function ProductFormModal({
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <Label htmlFor="category">Category *</Label>
+              <Label htmlFor="category">{t("prod_category_label")}</Label>
               <Select id="category" {...register("category")}>
-                <option value="Whole Grains">Whole Grains (Sinde, Gebs, etc.)</option>
-                <option value="Powders & Spices">Powders & Spices (Berbere, Shiro, etc.)</option>
-                <option value="Pulses / Legumes">Pulses / Legumes (Ater, Bakela, etc.)</option>
-                <option value="Flour / Milling">Flour / Milling</option>
-                <option value="Other">Other Commodity</option>
+                <option value="Whole Grains">{t("cat_whole_grains")}</option>
+                <option value="Powders & Spices">{t("cat_powders_spices")}</option>
+                <option value="Pulses / Legumes">{t("cat_pulses_legumes")}</option>
+                <option value="Flour / Milling">{t("cat_flour_milling")}</option>
+                <option value="Other">{t("cat_other")}</option>
               </Select>
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="default_unit_id">Default Display Unit *</Label>
+              <Label htmlFor="default_unit_id">{t("prod_unit_label")}</Label>
               <Select id="default_unit_id" {...register("default_unit_id")}>
                 {units.map((u) => (
                   <option key={u.id} value={u.id}>
-                    {u.name} ({u.symbol}) — {u.conversion_factor}g
+                    {u.name} ({u.symbol}) — {u.conversion_factor}{language === "am" ? "ግ" : "g"}
                   </option>
                 ))}
               </Select>
@@ -191,13 +193,13 @@ export function ProductFormModal({
           <div className="p-3 bg-muted/40 rounded-lg border space-y-3">
             <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
               <Calculator className="h-3.5 w-3.5 text-amber-600" />
-              <span>Pricing & Threshold in {currentUnit?.name || "Unit"}</span>
+              <span>{t("prod_pricing_box_title")} ({currentUnit?.name || (language === "am" ? "መለኪያ" : "Unit")})</span>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div className="space-y-1">
                 <Label htmlFor="cost_price_display" className="text-xs">
-                  Cost Price (ETB / {currentUnit?.symbol})
+                  {t("prod_cost_label")} ({t("currency_etb")} / {currentUnit?.symbol})
                 </Label>
                 <Input
                   id="cost_price_display"
@@ -209,7 +211,7 @@ export function ProductFormModal({
 
               <div className="space-y-1">
                 <Label htmlFor="selling_price_display" className="text-xs">
-                  Selling Price (ETB / {currentUnit?.symbol})
+                  {t("prod_sell_label")} ({t("currency_etb")} / {currentUnit?.symbol})
                 </Label>
                 <Input
                   id="selling_price_display"
@@ -221,7 +223,7 @@ export function ProductFormModal({
 
               <div className="space-y-1">
                 <Label htmlFor="reorder_threshold_display" className="text-xs">
-                  Reorder Alert ({currentUnit?.symbol})
+                  {t("prod_reorder_label")} ({currentUnit?.symbol})
                 </Label>
                 <Input
                   id="reorder_threshold_display"
@@ -235,22 +237,22 @@ export function ProductFormModal({
             {/* Live conversion breakdown for the user */}
             <div className="text-[11px] text-muted-foreground bg-background/80 p-2.5 rounded border space-y-1">
               <p>
-                <strong className="text-foreground">Base Unit Math:</strong> 1 {currentUnit?.symbol} = {factor.toLocaleString()} grams
+                <strong className="text-foreground">{t("prod_base_math")}:</strong> 1 {currentUnit?.symbol} = {factor.toLocaleString()} {language === "am" ? "ግራም (g)" : "Grams (g)"}
               </p>
               <p>
-                Cost: <span className="font-mono text-foreground font-medium">{formatETB(costPerGram)}</span> per gram &bull; Selling: <span className="font-mono text-foreground font-medium">{formatETB(sellingPerGram)}</span> per gram
+                {t("prod_cost_label")}: <span className="font-mono text-foreground font-medium">{formatETB(costPerGram)}</span> / {language === "am" ? "ግ" : "g"} &bull; {t("prod_sell_label")}: <span className="font-mono text-foreground font-medium">{formatETB(sellingPerGram)}</span> / {language === "am" ? "ግ" : "g"}
               </p>
               <p>
-                Reorder Threshold: <span className="font-mono text-foreground font-medium">{reorderThresholdGrams.toLocaleString()} grams</span>
+                {t("prod_reorder_label")}: <span className="font-mono text-foreground font-medium">{reorderThresholdGrams.toLocaleString()} {language === "am" ? "ግራም" : "g"}</span>
               </p>
             </div>
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="description">Description / Notes</Label>
+            <Label htmlFor="description">{t("prod_desc_label")}</Label>
             <Textarea
               id="description"
-              placeholder="Origin, quality grade, packaging specifications..."
+              placeholder={language === "am" ? "የመጣበት ቦታ፣ የጥራት ደረጃ፣ የማሸጊያ ዝርዝር..." : "Origin, quality grade, packaging specifications..."}
               {...register("description")}
             />
           </div>
@@ -261,7 +263,7 @@ export function ProductFormModal({
               variant="outline"
               onClick={() => onOpenChange(false)}
             >
-              Cancel
+              {t("btn_cancel")}
             </Button>
             <Button
               type="submit"
@@ -270,12 +272,10 @@ export function ProductFormModal({
             >
               {loading ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving...
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" /> {t("btn_processing")}
                 </>
-              ) : productToEdit ? (
-                "Update Product"
               ) : (
-                "Save Product"
+                t("btn_save")
               )}
             </Button>
           </DialogFooter>
