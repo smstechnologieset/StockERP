@@ -58,7 +58,7 @@ export function ProductsClient({
   isManager,
 }: ProductsClientProps) {
   const router = useRouter();
-  const { t, isAmharic } = useLanguage();
+  const { t, isAmharic, language } = useLanguage();
   const [data, setData] = useState(initialProducts);
   const [globalFilter, setGlobalFilter] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
@@ -164,7 +164,7 @@ export function ProductsClient({
         },
       }),
       columnHelper.accessor("cost_price_per_base_unit", {
-        header: `${t("prod_cost_col")} (${t("currency_etb")})`,
+        header: t("prod_cost_col"),
         cell: (info) => {
           const unit = info.row.original.default_unit;
           const factor = unit?.conversion_factor || 1;
@@ -180,7 +180,7 @@ export function ProductsClient({
         },
       }),
       columnHelper.accessor("selling_price_per_base_unit", {
-        header: `${t("prod_sell_col")} (${t("currency_etb")})`,
+        header: t("prod_sell_col"),
         cell: (info) => {
           const unit = info.row.original.default_unit;
           const factor = unit?.conversion_factor || 1;
@@ -270,7 +270,7 @@ export function ProductsClient({
         },
       }),
     ],
-    [isManager, data]
+    [isManager, data, language, t, isAmharic]
   );
 
   const table = useReactTable({
@@ -437,7 +437,9 @@ export function ProductsClient({
                       colSpan={columns.length}
                       className="h-32 text-center text-muted-foreground"
                     >
-                      No commodities found. Click "Add Product" to create your first commodity item.
+                      {isAmharic
+                        ? 'ምንም የተመዘገበ ምርት አልተገኘም። አዲስ እቃ ለመመዝገብ "ምርት መዝግብ" የሚለውን ይጫኑ።'
+                        : 'No commodities found. Click "Add Product" to create your first commodity item.'}
                     </td>
                   </tr>
                 )}
@@ -448,17 +450,35 @@ export function ProductsClient({
           {/* Pagination Controls */}
           <div className="flex items-center justify-between px-6 py-4 border-t">
             <div className="text-xs text-muted-foreground">
-              Showing{" "}
-              {table.getState().pagination.pageIndex *
-                table.getState().pagination.pageSize +
-                1}{" "}
-              to{" "}
-              {Math.min(
-                (table.getState().pagination.pageIndex + 1) *
-                  table.getState().pagination.pageSize,
-                filteredData.length
-              )}{" "}
-              of {filteredData.length} items
+              {isAmharic ? (
+                <span>
+                  {filteredData.length} ምርቶች ውስጥ ከ{" "}
+                  {table.getState().pagination.pageIndex *
+                    table.getState().pagination.pageSize +
+                    1}{" "}
+                  እስከ{" "}
+                  {Math.min(
+                    (table.getState().pagination.pageIndex + 1) *
+                      table.getState().pagination.pageSize,
+                    filteredData.length
+                  )}{" "}
+                  በማሳየት ላይ
+                </span>
+              ) : (
+                <span>
+                  Showing{" "}
+                  {table.getState().pagination.pageIndex *
+                    table.getState().pagination.pageSize +
+                    1}{" "}
+                  to{" "}
+                  {Math.min(
+                    (table.getState().pagination.pageIndex + 1) *
+                      table.getState().pagination.pageSize,
+                    filteredData.length
+                  )}{" "}
+                  of {filteredData.length} items
+                </span>
+              )}
             </div>
             <div className="flex items-center space-x-2">
               <Button
@@ -467,7 +487,7 @@ export function ProductsClient({
                 onClick={() => table.previousPage()}
                 disabled={!table.getCanPreviousPage()}
               >
-                Previous
+                {isAmharic ? "ቀዳሚ" : "Previous"}
               </Button>
               <Button
                 variant="outline"
@@ -475,7 +495,7 @@ export function ProductsClient({
                 onClick={() => table.nextPage()}
                 disabled={!table.getCanNextPage()}
               >
-                Next
+                {isAmharic ? "ቀጣይ" : "Next"}
               </Button>
             </div>
           </div>
