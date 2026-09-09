@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { productSchema, type ProductFormValues } from "@/lib/validations/product";
@@ -22,7 +22,7 @@ interface ProductFormModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   units: Unit[];
-  productToEdit?: Product | null;
+  productToEdit?: (Product & { default_unit?: Unit }) | null;
   onSuccess: () => void;
 }
 
@@ -63,12 +63,56 @@ export function ProductFormModal({
       category: productToEdit?.category || "Whole Grains",
       description: productToEdit?.description || "",
       default_unit_id: initialDefaultUnitId,
-      cost_price_display: productToEdit ? Number(productToEdit.cost_price_per_base_unit) : 0,
-      selling_price_display: productToEdit ? Number(productToEdit.selling_price_per_base_unit) : 0,
-      reorder_threshold_display: productToEdit ? Number(productToEdit.reorder_threshold_base_units) : 5,
-      is_active: productToEdit ? productToEdit.is_active : true,
+      cost_price_display: 0,
+      selling_price_display: 0,
+      reorder_threshold_display: 5,
+      is_active: true,
     },
   });
+
+  // Re-populate form with existing product values whenever productToEdit or open changes
+  useEffect(() => {
+    if (open) {
+      if (productToEdit) {
+        const unit = availableUnits.find((u) => u.id === productToEdit.default_unit_id) || productToEdit.default_unit || defaultUnit;
+        const factor = unit?.conversion_factor || 1;
+        const costDisplay = factor === 1
+          ? Number(productToEdit.cost_price_per_base_unit)
+          : Number((Number(productToEdit.cost_price_per_base_unit) * factor).toFixed(2));
+        const sellDisplay = factor === 1
+          ? Number(productToEdit.selling_price_per_base_unit)
+          : Number((Number(productToEdit.selling_price_per_base_unit) * factor).toFixed(2));
+        const reorderDisplay = factor === 1
+          ? Number(productToEdit.reorder_threshold_base_units)
+          : Number((Number(productToEdit.reorder_threshold_base_units) / factor).toFixed(2));
+
+        reset({
+          name: productToEdit.name || "",
+          code: productToEdit.code || "",
+          category: productToEdit.category || "Whole Grains",
+          description: productToEdit.description || "",
+          default_unit_id: productToEdit.default_unit_id || defaultUnit?.id || "",
+          cost_price_display: isNaN(costDisplay) ? 0 : costDisplay,
+          selling_price_display: isNaN(sellDisplay) ? 0 : sellDisplay,
+          reorder_threshold_display: isNaN(reorderDisplay) ? 5 : reorderDisplay,
+          is_active: productToEdit.is_active ?? true,
+        });
+      } else {
+        reset({
+          name: "",
+          code: "",
+          category: "Whole Grains",
+          description: "",
+          default_unit_id: defaultUnit?.id || "",
+          cost_price_display: 0,
+          selling_price_display: 0,
+          reorder_threshold_display: 5,
+          is_active: true,
+        });
+      }
+      setErrorMessage(null);
+    }
+  }, [open, productToEdit, reset, defaultUnit]);
 
   const selectedUnitId = watch("default_unit_id");
   const costPriceDisplay = Number(watch("cost_price_display")) || 0;
@@ -86,16 +130,21 @@ export function ProductFormModal({
     setErrorMessage(null);
 
     try {
-      // Direct unit pricing without forced conversion to grams
+      const unit = availableUnits.find((u) => u.id === data.default_unit_id) || defaultUnit;
+      const factor = unit?.conversion_factor || 1;
+      const costBase = factor === 1 ? data.cost_price_display : (factor > 0 ? data.cost_price_display / factor : 0);
+      const sellBase = factor === 1 ? data.selling_price_display : (factor > 0 ? data.selling_price_display / factor : 0);
+      const reorderBase = factor === 1 ? data.reorder_threshold_display : (factor > 0 ? data.reorder_threshold_display * factor : 0);
+
       const payload = {
         name: data.name,
         code: data.code || null,
         category: data.category,
         description: data.description || null,
         default_unit_id: data.default_unit_id,
-        cost_price_per_base_unit: data.cost_price_display,
-        selling_price_per_base_unit: data.selling_price_display,
-        reorder_threshold_base_units: data.reorder_threshold_display,
+        cost_price_per_base_unit: costBase,
+        selling_price_per_base_unit: sellBase,
+        reorder_threshold_base_units: reorderBase,
         is_active: data.is_active,
       };
 

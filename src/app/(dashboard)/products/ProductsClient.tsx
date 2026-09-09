@@ -505,7 +505,10 @@ export function ProductsClient({
       {/* Modal Dialog */}
       <ProductFormModal
         open={modalOpen}
-        onOpenChange={setModalOpen}
+        onOpenChange={(open) => {
+          setModalOpen(open);
+          if (!open) setEditingProduct(null);
+        }}
         units={units}
         productToEdit={editingProduct}
         onSuccess={() => {
