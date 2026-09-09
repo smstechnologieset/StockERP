@@ -113,3 +113,58 @@
     transform: translateX(100%);
   }
 }
+
+/* Print Styles for PDF / Paper Reports */
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 12mm;
+  }
+
+  body {
+    background: #ffffff !important;
+    color: #111827 !important;
+    font-size: 11pt !important;
+    line-height: 1.4 !important;
+  }
+
+  /* Hide navigation, sidebars, interactive controls, and dark theme backgrounds */
+  aside,
+  nav,
+  header,
+  .no-print,
+  button,
+  .print-hide {
+    display: none !important;
+  }
+
+  /* Unconstrain widths */
+  main,
+  .print-full-width {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* Ensure card backgrounds and borders print crisply */
+  .card,
+  .border {
+    box-shadow: none !important;
+    border-color: #d1d5db !important;
+  }
+
+  /* Avoid page break inside summary cards and table rows */
+  .print-avoid-break,
+  tr,
+  .card {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  /* Show dedicated print header and footer */
+  .print-only {
+    display: block !important;
+  }
+}
+
