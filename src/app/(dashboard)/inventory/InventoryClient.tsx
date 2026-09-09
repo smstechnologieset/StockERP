@@ -258,7 +258,6 @@ export function InventoryClient({
                   <th className="px-5 py-3">{t("purch_commodity_col")}</th>
                   <th className="px-5 py-3">{t("prod_category_col")}</th>
                   <th className="px-5 py-3 text-right">{t("inv_on_hand_display")}</th>
-                  <th className="px-5 py-3 text-right">{t("inv_base_grams")}</th>
                   <th className="px-5 py-3 text-right">{t("stock_current_valuation")}</th>
                   <th className="px-5 py-3 text-center">{t("common_status")}</th>
                   <th className="px-5 py-3 text-right">{t("common_actions")}</th>
@@ -279,10 +278,10 @@ export function InventoryClient({
                       {item.product_category}
                     </td>
                     <td className="px-5 py-3.5 text-right font-bold text-sm text-foreground">
-                      {formatQuantity(item.current_stock_default_unit, item.default_unit_symbol || "")}
-                    </td>
-                    <td className="px-5 py-3.5 text-right font-mono text-muted-foreground">
-                      {formatQuantity(item.current_stock_base_units, "g")}
+                      {formatQuantity(
+                        item.default_unit_factor === 1 ? item.current_stock_base_units : item.current_stock_default_unit,
+                        item.default_unit_symbol || ""
+                      )}
                     </td>
                     <td className="px-5 py-3.5 text-right font-semibold text-foreground">
                       {formatETB(item.current_valuation_etb)}

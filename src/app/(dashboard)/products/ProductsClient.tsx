@@ -168,15 +168,12 @@ export function ProductsClient({
         cell: (info) => {
           const unit = info.row.original.default_unit;
           const factor = unit?.conversion_factor || 1;
-          const priceInUnit = info.getValue() * factor;
+          const priceInUnit = factor === 1 ? info.getValue() : info.getValue() * factor;
           return (
             <div>
               <div className="font-medium text-foreground">
                 {formatETB(priceInUnit)}
                 <span className="text-[11px] text-muted-foreground"> / {unit?.symbol || "unit"}</span>
-              </div>
-              <div className="text-[10px] text-muted-foreground font-mono">
-                {formatETB(info.getValue())} / g
               </div>
             </div>
           );
@@ -187,15 +184,12 @@ export function ProductsClient({
         cell: (info) => {
           const unit = info.row.original.default_unit;
           const factor = unit?.conversion_factor || 1;
-          const priceInUnit = info.getValue() * factor;
+          const priceInUnit = factor === 1 ? info.getValue() : info.getValue() * factor;
           return (
             <div>
               <div className="font-bold text-amber-900 dark:text-amber-300">
                 {formatETB(priceInUnit)}
                 <span className="text-[11px] text-muted-foreground font-normal"> / {unit?.symbol || "unit"}</span>
-              </div>
-              <div className="text-[10px] text-muted-foreground font-mono">
-                {formatETB(info.getValue())} / g
               </div>
             </div>
           );
@@ -206,15 +200,12 @@ export function ProductsClient({
         cell: (info) => {
           const unit = info.row.original.default_unit;
           const factor = unit?.conversion_factor || 1;
-          const thresholdInUnit = info.getValue() / factor;
+          const thresholdInUnit = factor === 1 ? info.getValue() : info.getValue() / factor;
           return (
             <div>
               <span className="font-medium text-foreground">
                 {formatQuantity(thresholdInUnit, unit?.symbol)}
               </span>
-              <div className="text-[10px] text-muted-foreground font-mono">
-                {formatQuantity(info.getValue(), "g")}
-              </div>
             </div>
           );
         },

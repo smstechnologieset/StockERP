@@ -23,18 +23,13 @@ export default async function DashboardLayout({
       userEmail = user.email || userEmail;
       const { data: profile } = await supabase
         .from("profiles")
-        .select("full_name, role, branch_id, branches(name)")
+        .select("full_name, role")
         .eq("id", user.id)
         .single();
 
       if (profile) {
         userName = profile.full_name || userName;
         userRole = profile.role || userRole;
-        // @ts-ignore
-        if (profile.branches?.name) {
-          // @ts-ignore
-          branchName = profile.branches.name;
-        }
       }
 
       // Check low stock count from view

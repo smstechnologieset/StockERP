@@ -110,8 +110,10 @@ export function POSRegister({ products, units, stockView }: POSRegisterProps) {
       units.find((u) => u.id === product.default_unit_id) ||
       units.find((u) => u.symbol === "kg") ||
       units[0];
-    const factor = defaultUnit?.conversion_factor || 1000;
-    const initialPrice = Number((product.selling_price_per_base_unit * factor).toFixed(2)) || 100;
+    const factor = defaultUnit?.conversion_factor || 1;
+    const initialPrice = factor === 1 
+      ? Number(product.selling_price_per_base_unit) 
+      : Number((product.selling_price_per_base_unit * factor).toFixed(2)) || 100;
     const stockGrams = stockMap.get(product.id) || 0;
 
     setCart((prev) => {
@@ -378,8 +380,9 @@ export function POSRegister({ products, units, stockView }: POSRegisterProps) {
                 units.find((u) => u.id === p.default_unit_id) ||
                 units.find((u) => u.symbol === "kg") ||
                 units[0];
-              const factor = defaultUnit?.conversion_factor || 1000;
-              const priceDisplay = p.selling_price_per_base_unit * factor;
+              const factor = defaultUnit?.conversion_factor || 1;
+              const priceDisplay = factor === 1 ? p.selling_price_per_base_unit : p.selling_price_per_base_unit * factor;
+              const stockInUnit = factor === 1 ? stockGrams : (factor > 0 ? stockGrams / factor : stockGrams);
               const isOutOfStock = stockGrams <= 0;
 
               return (
@@ -401,7 +404,7 @@ export function POSRegister({ products, units, stockView }: POSRegisterProps) {
                         variant={isOutOfStock ? "danger" : "secondary"}
                         className="text-[10px] shrink-0"
                       >
-                        {formatQuantity(stockGrams, "g")}
+                        {formatQuantity(stockInUnit, defaultUnit?.symbol || "unit")}
                       </Badge>
                     </div>
                   </CardHeader>
@@ -549,15 +552,15 @@ export function POSRegister({ products, units, stockView }: POSRegisterProps) {
                       {/* Stock on-hand check indicator */}
                       <div className="flex items-center justify-between text-[10px]">
                         <span className="text-muted-foreground">
-                          {t("common_weight")}: {formatQuantity(itemGrams, "g")}
+                          {t("common_quantity")}: {item.quantity} {u?.symbol || ""}
                         </span>
                         {isNegative ? (
                           <span className="text-red-600 font-bold flex items-center gap-1">
-                            <AlertTriangle className="h-3 w-3" /> {t("common_exceeds_stock")} ({formatQuantity(item.currentStockGrams, "g")})
+                            <AlertTriangle className="h-3 w-3" /> {t("common_exceeds_stock")} ({formatQuantity(factor === 1 ? item.currentStockGrams : item.currentStockGrams / factor, u?.symbol || "")})
                           </span>
                         ) : (
                           <span className="text-emerald-700 dark:text-emerald-400">
-                            {t("common_available")}: {formatQuantity(item.currentStockGrams, "g")}
+                            {t("common_available")}: {formatQuantity(factor === 1 ? item.currentStockGrams : item.currentStockGrams / factor, u?.symbol || "")}
                           </span>
                         )}
                       </div>

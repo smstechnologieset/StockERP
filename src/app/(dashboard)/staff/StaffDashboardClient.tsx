@@ -134,7 +134,6 @@ export function StaffDashboardClient({ displayProducts }: StaffDashboardClientPr
                   <th className="px-6 py-3">{t("prod_name_col")}</th>
                   <th className="px-6 py-3">{t("prod_category_col")}</th>
                   <th className="px-6 py-3 text-right">{t("inv_on_hand_display")}</th>
-                  <th className="px-6 py-3 text-right">{t("inv_base_grams")}</th>
                   <th className="px-6 py-3 text-center">{t("common_status")}</th>
                 </tr>
               </thead>
@@ -148,10 +147,10 @@ export function StaffDashboardClient({ displayProducts }: StaffDashboardClientPr
                       {p.product_category}
                     </td>
                     <td className="px-6 py-4 text-right font-semibold text-foreground">
-                      {formatQuantity(p.current_stock_default_unit, p.default_unit_symbol)}
-                    </td>
-                    <td className="px-6 py-4 text-right text-xs text-muted-foreground font-mono">
-                      {formatQuantity(p.current_stock_base_units, "g")}
+                      {formatQuantity(
+                        p.default_unit_factor === 1 ? p.current_stock_base_units : p.current_stock_default_unit,
+                        p.default_unit_symbol
+                      )}
                     </td>
                     <td className="px-6 py-4 text-center">
                       {p.is_low_stock ? (

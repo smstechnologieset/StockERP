@@ -7,7 +7,6 @@ import {
   ShieldCheck,
   UserCheck,
   Search,
-  Building2,
   Calendar,
   Mail,
   Loader2,
@@ -39,8 +38,7 @@ export function UsersClient({ initialUsers }: UsersClientProps) {
   const filteredUsers = users.filter(
     (u) =>
       u.full_name.toLowerCase().includes(search.toLowerCase()) ||
-      (u.email && u.email.toLowerCase().includes(search.toLowerCase())) ||
-      (u.branch_name && u.branch_name.toLowerCase().includes(search.toLowerCase()))
+      (u.email && u.email.toLowerCase().includes(search.toLowerCase()))
   );
 
   async function handleToggleRole(user: Profile) {
@@ -138,7 +136,7 @@ export function UsersClient({ initialUsers }: UsersClientProps) {
           <div className="relative max-w-md">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder={isAmharic ? "ተጠቃሚዎችን በስም፣ ኢሜይል፣ ወይም ቅርንጫፍ ፈልግ..." : "Search users by name, email, or branch..."}
+              placeholder={isAmharic ? "ተጠቃሚዎችን በስም ወይም ኢሜይል ፈልግ..." : "Search users by name or email..."}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="pl-9 h-9 text-xs"
@@ -164,7 +162,6 @@ export function UsersClient({ initialUsers }: UsersClientProps) {
                 <tr>
                   <th className="px-5 py-3">{t("users_full_name")}</th>
                   <th className="px-5 py-3">{t("users_login_email")}</th>
-                  <th className="px-5 py-3">{t("users_branch")}</th>
                   <th className="px-5 py-3 text-center">{t("users_assigned_role")}</th>
                   <th className="px-5 py-3 text-center">{t("users_registration_date")}</th>
                   <th className="px-5 py-3 text-right">{t("users_access_toggle")}</th>
@@ -189,13 +186,6 @@ export function UsersClient({ initialUsers }: UsersClientProps) {
                         <div className="flex items-center gap-1.5">
                           <Mail className="h-3.5 w-3.5 text-muted-foreground" />
                           <span>{u.email || "staff@stockerp.et"}</span>
-                        </div>
-                      </td>
-
-                      <td className="px-5 py-3.5">
-                        <div className="flex items-center gap-1.5 text-foreground">
-                          <Building2 className="h-3.5 w-3.5 text-amber-600" />
-                          <span>{u.branch_name === "Main Branch" || !u.branch_name ? t("main_branch") : u.branch_name}</span>
                         </div>
                       </td>
 

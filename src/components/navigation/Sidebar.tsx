@@ -10,8 +10,6 @@ import {
   Boxes,
   Users,
   BarChart3,
-  Scale,
-  Building2,
   LogOut,
   ShieldCheck,
   UserCheck,
@@ -64,7 +62,6 @@ export function Sidebar({
     { name: t("nav_products"), href: "/products", icon: Wheat },
     { name: t("nav_pricing"), href: "/products/pricing", icon: Tag },
     { name: t("nav_suppliers"), href: "/suppliers", icon: Users },
-    { name: t("nav_units"), href: "/units", icon: Scale },
     { name: t("nav_reports"), href: "/reports", icon: BarChart3 },
     { name: t("nav_users"), href: "/users", icon: UserCog },
   ];
@@ -92,28 +89,23 @@ export function Sidebar({
         </div>
       </div>
 
-      {/* Branch & Role Indicator */}
-      <div className="border-b px-4 py-3 bg-muted/30">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            <Building2 className="h-3.5 w-3.5 text-amber-600" />
-            <span className="font-medium text-foreground">{branchName === "Main Branch" ? t("main_branch") : branchName}</span>
-          </div>
-          <Badge
-            variant={isManager ? "warning" : "info"}
-            className="text-[10px] uppercase font-bold tracking-wider px-2 py-0"
-          >
-            {isManager ? (
-              <span className="flex items-center gap-1">
-                <ShieldCheck className="h-3 w-3" /> {t("owner_manager")}
-              </span>
-            ) : (
-              <span className="flex items-center gap-1">
-                <UserCheck className="h-3 w-3" /> {t("staff")}
-              </span>
-            )}
-          </Badge>
-        </div>
+      {/* Role Indicator */}
+      <div className="border-b px-4 py-2.5 bg-muted/30 flex items-center justify-between">
+        <span className="text-xs text-muted-foreground">{t("nav_users")}:</span>
+        <Badge
+          variant={isManager ? "warning" : "info"}
+          className="text-[10px] uppercase font-bold tracking-wider px-2.5 py-0.5"
+        >
+          {isManager ? (
+            <span className="flex items-center gap-1">
+              <ShieldCheck className="h-3 w-3" /> {t("owner_manager")}
+            </span>
+          ) : (
+            <span className="flex items-center gap-1">
+              <UserCheck className="h-3 w-3" /> {t("staff")}
+            </span>
+          )}
+        </Badge>
       </div>
 
       {/* Navigation Links */}

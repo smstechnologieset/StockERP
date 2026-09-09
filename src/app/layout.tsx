@@ -18,8 +18,8 @@ const outfit = Outfit({
 });
 
 export const metadata: Metadata = {
-  title: "Grain & Powder Trading ERP | Addis Ababa",
-  description: "Enterprise inventory, purchasing, POS, and ledger management for whole grains and powdered food trading in Ethiopia.",
+  title: "Stock & Inventory ERP | Shop Management",
+  description: "Point of sale, stock tracking, credit management, and inventory ledger for shop and retail operations.",
 };
 
 export default function RootLayout({

@@ -16,6 +16,8 @@ import { Loader2, Calculator } from "lucide-react";
 import type { Unit, Product } from "@/types/database";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 
+import { STANDARD_UNITS } from "@/lib/constants/units";
+
 interface ProductFormModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -36,12 +38,16 @@ export function ProductFormModal({
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const supabase = createClient();
 
-  const defaultUnit = units.find((u) => u.is_base_unit) || units[0];
+  // Merge DB units with STANDARD_UNITS ensuring no duplicate symbols
+  const availableUnits = [...units];
+  for (const std of STANDARD_UNITS) {
+    if (!availableUnits.some((u) => u.symbol.toLowerCase() === std.symbol.toLowerCase())) {
+      availableUnits.push(std);
+    }
+  }
 
-  // Default values calculation
+  const defaultUnit = availableUnits.find((u) => u.symbol === "kg") || availableUnits[0];
   const initialDefaultUnitId = productToEdit?.default_unit_id || defaultUnit?.id || "";
-  const selectedUnitObj = units.find((u) => u.id === initialDefaultUnitId) || defaultUnit;
-  const initialFactor = selectedUnitObj?.conversion_factor || 1000;
 
   const {
     register,
@@ -57,47 +63,39 @@ export function ProductFormModal({
       category: productToEdit?.category || "Whole Grains",
       description: productToEdit?.description || "",
       default_unit_id: initialDefaultUnitId,
-      cost_price_display: productToEdit
-        ? Number((productToEdit.cost_price_per_base_unit * initialFactor).toFixed(2))
-        : 0,
-      selling_price_display: productToEdit
-        ? Number((productToEdit.selling_price_per_base_unit * initialFactor).toFixed(2))
-        : 0,
-      reorder_threshold_display: productToEdit
-        ? Number((productToEdit.reorder_threshold_base_units / initialFactor).toFixed(2))
-        : 5,
+      cost_price_display: productToEdit ? Number(productToEdit.cost_price_per_base_unit) : 0,
+      selling_price_display: productToEdit ? Number(productToEdit.selling_price_per_base_unit) : 0,
+      reorder_threshold_display: productToEdit ? Number(productToEdit.reorder_threshold_base_units) : 5,
       is_active: productToEdit ? productToEdit.is_active : true,
     },
   });
 
   const selectedUnitId = watch("default_unit_id");
-  const costPriceDisplay = watch("cost_price_display") || 0;
-  const sellingPriceDisplay = watch("selling_price_display") || 0;
-  const reorderDisplay = watch("reorder_threshold_display") || 0;
+  const costPriceDisplay = Number(watch("cost_price_display")) || 0;
+  const sellingPriceDisplay = Number(watch("selling_price_display")) || 0;
+  const reorderDisplay = Number(watch("reorder_threshold_display")) || 0;
 
-  const currentUnit = units.find((u) => u.id === selectedUnitId) || defaultUnit;
-  const factor = currentUnit?.conversion_factor || 1;
+  const currentUnit = availableUnits.find((u) => u.id === selectedUnitId) || defaultUnit;
 
-  // Real-time unit conversion calculations
-  const costPerGram = factor > 0 ? costPriceDisplay / factor : 0;
-  const sellingPerGram = factor > 0 ? sellingPriceDisplay / factor : 0;
-  const reorderThresholdGrams = reorderDisplay * factor;
+  // Margin preview
+  const unitMargin = sellingPriceDisplay - costPriceDisplay;
+  const unitMarginPct = sellingPriceDisplay > 0 ? (unitMargin / sellingPriceDisplay) * 100 : 0;
 
   async function onSubmit(data: ProductFormValues) {
     setLoading(true);
     setErrorMessage(null);
 
     try {
-      // Convert display units to base units (grams) for storage
+      // Direct unit pricing without forced conversion to grams
       const payload = {
         name: data.name,
         code: data.code || null,
         category: data.category,
         description: data.description || null,
         default_unit_id: data.default_unit_id,
-        cost_price_per_base_unit: costPerGram,
-        selling_price_per_base_unit: sellingPerGram,
-        reorder_threshold_base_units: reorderThresholdGrams,
+        cost_price_per_base_unit: data.cost_price_display,
+        selling_price_per_base_unit: data.selling_price_display,
+        reorder_threshold_base_units: data.reorder_threshold_display,
         is_active: data.is_active,
       };
 
@@ -147,7 +145,7 @@ export function ProductFormModal({
               <Label htmlFor="name">{t("prod_name_label")}</Label>
               <Input
                 id="name"
-                placeholder={language === "am" ? "ምሳሌ፡ ልዩ የባሌ በርበሬ አንደኛ ደረጃ" : "e.g. Berbere Special Grade 1"}
+                placeholder={language === "am" ? "ምሳሌ፡ የምግብ ዘይት 5L ወይም ልዩ በርበሬ" : "e.g. Cooking Oil 5L or Berbere Special"}
                 {...register("name")}
               />
               {errors.name && (
@@ -159,7 +157,7 @@ export function ProductFormModal({
               <Label htmlFor="code">{t("prod_code_label")}</Label>
               <Input
                 id="code"
-                placeholder={language === "am" ? "ምሳሌ፡ BER-001 ወይም WHT-Q" : "e.g. BER-001 or WHT-Q"}
+                placeholder={language === "am" ? "ምሳሌ፡ OIL-5L ወይም BER-001" : "e.g. OIL-5L or BER-001"}
                 {...register("code")}
               />
             </div>
@@ -171,6 +169,8 @@ export function ProductFormModal({
               <Select id="category" {...register("category")}>
                 <option value="Whole Grains">{t("cat_whole_grains")}</option>
                 <option value="Powders & Spices">{t("cat_powders_spices")}</option>
+                <option value="Edible Oils & Liquids">{t("cat_edible_oils")}</option>
+                <option value="Packaged Goods & Provisions">{t("cat_packaged_goods")}</option>
                 <option value="Pulses / Legumes">{t("cat_pulses_legumes")}</option>
                 <option value="Flour / Milling">{t("cat_flour_milling")}</option>
                 <option value="Other">{t("cat_other")}</option>
@@ -180,9 +180,9 @@ export function ProductFormModal({
             <div className="space-y-1.5">
               <Label htmlFor="default_unit_id">{t("prod_unit_label")}</Label>
               <Select id="default_unit_id" {...register("default_unit_id")}>
-                {units.map((u) => (
+                {availableUnits.map((u) => (
                   <option key={u.id} value={u.id}>
-                    {u.name} ({u.symbol}) — {u.conversion_factor}{language === "am" ? "ግ" : "g"}
+                    {u.name} ({u.symbol})
                   </option>
                 ))}
               </Select>
@@ -190,10 +190,17 @@ export function ProductFormModal({
           </div>
 
           {/* Pricing & Reorder Thresholds */}
-          <div className="p-3 bg-muted/40 rounded-lg border space-y-3">
-            <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-              <Calculator className="h-3.5 w-3.5 text-amber-600" />
-              <span>{t("prod_pricing_box_title")} ({currentUnit?.name || (language === "am" ? "መለኪያ" : "Unit")})</span>
+          <div className="p-3.5 bg-muted/40 rounded-lg border space-y-3">
+            <div className="flex items-center justify-between text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+              <div className="flex items-center gap-2">
+                <Calculator className="h-3.5 w-3.5 text-amber-600" />
+                <span>{t("prod_pricing_box_title")} ({currentUnit?.name || currentUnit?.symbol})</span>
+              </div>
+              {sellingPriceDisplay > 0 && (
+                <span className={`text-[11px] font-bold ${unitMargin >= 0 ? "text-emerald-700 dark:text-emerald-400" : "text-red-600"}`}>
+                  {t("pricing_gross_margin")}: {formatETB(unitMargin)} ({unitMarginPct.toFixed(1)}%)
+                </span>
+              )}
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -232,19 +239,6 @@ export function ProductFormModal({
                   {...register("reorder_threshold_display")}
                 />
               </div>
-            </div>
-
-            {/* Live conversion breakdown for the user */}
-            <div className="text-[11px] text-muted-foreground bg-background/80 p-2.5 rounded border space-y-1">
-              <p>
-                <strong className="text-foreground">{t("prod_base_math")}:</strong> 1 {currentUnit?.symbol} = {factor.toLocaleString()} {language === "am" ? "ግራም (g)" : "Grams (g)"}
-              </p>
-              <p>
-                {t("prod_cost_label")}: <span className="font-mono text-foreground font-medium">{formatETB(costPerGram)}</span> / {language === "am" ? "ግ" : "g"} &bull; {t("prod_sell_label")}: <span className="font-mono text-foreground font-medium">{formatETB(sellingPerGram)}</span> / {language === "am" ? "ግ" : "g"}
-              </p>
-              <p>
-                {t("prod_reorder_label")}: <span className="font-mono text-foreground font-medium">{reorderThresholdGrams.toLocaleString()} {language === "am" ? "ግራም" : "g"}</span>
-              </p>
             </div>
           </div>
 

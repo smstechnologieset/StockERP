@@ -8,7 +8,7 @@ import {
   Scale,
   Users,
   BarChart3,
-  Building2,
+  Store,
   DollarSign,
   ArrowUpRight,
   ShieldCheck,
@@ -115,19 +115,19 @@ export function ManagerDashboardClient({
           </CardContent>
         </Card>
 
-        {/* KPI 4: Active Branch */}
+        {/* KPI 4: Store Status */}
         <Card className="shadow-sm border">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              {t("dash_trading_location")}
+              {isAmharic ? "የሱቁ የስራ ሁኔታ" : "Store Status"}
             </CardTitle>
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600/10 text-blue-600">
-              <Building2 className="h-4 w-4" />
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-600/10 text-emerald-600">
+              <Store className="h-4 w-4" />
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold font-heading text-foreground truncate">
-              {t("main_branch")}
+            <div className="text-2xl font-bold font-heading text-emerald-700 dark:text-emerald-400 truncate">
+              {isAmharic ? "ክፍት / ንቁ" : "Open & Active"}
             </div>
             <p className="text-[11px] text-muted-foreground mt-1">
               {t("app_subtitle")}
@@ -272,7 +272,6 @@ export function ManagerDashboardClient({
                   <th className="px-6 py-3.5">{t("prod_name_col")}</th>
                   <th className="px-6 py-3.5">{t("prod_category_col")}</th>
                   <th className="px-6 py-3.5 text-right">{t("inv_on_hand_display")}</th>
-                  <th className="px-6 py-3.5 text-right">{t("inv_base_grams")}</th>
                   <th className="px-6 py-3.5 text-right">{t("prod_cost_col")}</th>
                   <th className="px-6 py-3.5 text-right">{t("stock_current_valuation")}</th>
                   <th className="px-6 py-3.5 text-center">{t("common_status")}</th>
@@ -280,8 +279,8 @@ export function ManagerDashboardClient({
               </thead>
               <tbody className="divide-y">
                 {displayItems.map((item) => {
-                  const factor = item.default_unit_factor || 1000;
-                  const costPerUnit = (item.cost_price_per_base_unit || 0) * factor;
+                  const factor = item.default_unit_factor || 1;
+                  const costPerUnit = factor === 1 ? (item.cost_price_per_base_unit || 0) : (item.cost_price_per_base_unit || 0) * factor;
 
                   return (
                     <tr key={item.product_id} className="hover:bg-muted/30 transition-colors">
@@ -292,10 +291,10 @@ export function ManagerDashboardClient({
                         {item.product_category}
                       </td>
                       <td className="px-6 py-4 text-right font-semibold text-foreground">
-                        {formatQuantity(item.current_stock_default_unit, item.default_unit_symbol)}
-                      </td>
-                      <td className="px-6 py-4 text-right text-xs text-muted-foreground font-mono">
-                        {formatQuantity(item.current_stock_base_units, "g")}
+                        {formatQuantity(
+                          item.default_unit_factor === 1 ? item.current_stock_base_units : item.current_stock_default_unit,
+                          item.default_unit_symbol
+                        )}
                       </td>
                       <td className="px-6 py-4 text-right text-xs text-foreground">
                         {formatETB(costPerUnit)} / {item.default_unit_symbol}

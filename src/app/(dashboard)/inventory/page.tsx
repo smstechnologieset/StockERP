@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { InventoryClient } from "./InventoryClient";
 import type { ProductCurrentStockView, Unit } from "@/types/database";
+import { STANDARD_UNITS } from "@/lib/constants/units";
 
 export const revalidate = 0;
 
@@ -33,9 +34,12 @@ export default async function InventoryPage({
 
     if (unitsData && unitsData.length > 0) {
       units = unitsData;
+    } else {
+      units = STANDARD_UNITS;
     }
   } catch (error) {
     console.error("Error fetching inventory view:", error);
+    units = STANDARD_UNITS;
   }
 
   // Fallback demo data if empty

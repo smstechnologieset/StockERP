@@ -166,10 +166,10 @@ export function MovementsClient({ initialMovements, error }: MovementsClientProp
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-foreground">
-              {formatQuantity(metrics.inboundGrams, "g")}
+              {metrics.inboundGrams > 0 ? metrics.inboundGrams.toLocaleString() : 0} {isAmharic ? "አሃዶች" : "Units"}
             </div>
             <p className="text-xs text-muted-foreground mt-1">
-              ({formatQuantity(metrics.inboundGrams / 100000, "q")} / {formatQuantity(metrics.inboundGrams / 1000, "kg")})
+              {isAmharic ? "በተመዘገቡ መለኪያዎች" : "In registered units"}
             </p>
           </CardContent>
         </Card>
@@ -199,10 +199,10 @@ export function MovementsClient({ initialMovements, error }: MovementsClientProp
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-foreground">
-              {formatQuantity(metrics.outboundGrams, "g")}
+              {metrics.outboundGrams > 0 ? metrics.outboundGrams.toLocaleString() : 0} {isAmharic ? "አሃዶች" : "Units"}
             </div>
             <p className="text-xs text-muted-foreground mt-1">
-              ({formatQuantity(metrics.outboundGrams / 100000, "q")} / {formatQuantity(metrics.outboundGrams / 1000, "kg")})
+              {isAmharic ? "በተመዘገቡ መለኪያዎች" : "In registered units"}
             </p>
           </CardContent>
         </Card>
@@ -229,37 +229,33 @@ export function MovementsClient({ initialMovements, error }: MovementsClientProp
                 onClick={() => setFilterType("all")}
                 className="h-8 text-xs"
               >
-                {t("btn_all")} ({initialMovements.length})
+                {t("btn_all")}
               </Button>
               <Button
                 variant={filterType === "inbound" ? "default" : "outline"}
                 size="sm"
                 onClick={() => setFilterType("inbound")}
-                className="h-8 text-xs gap-1"
+                className="h-8 text-xs text-emerald-700 dark:text-emerald-400"
               >
-                <ArrowDownLeft className="h-3.5 w-3.5 text-emerald-600" />
-                {t("stock_inbound")} ({metrics.inboundCount})
+                {t("stock_inbound")}
               </Button>
               <Button
                 variant={filterType === "outbound" ? "default" : "outline"}
                 size="sm"
                 onClick={() => setFilterType("outbound")}
-                className="h-8 text-xs gap-1"
+                className="h-8 text-xs text-red-600"
               >
-                <ArrowUpRight className="h-3.5 w-3.5 text-red-600" />
-                {t("stock_outbound")} ({metrics.outboundCount})
+                {t("stock_outbound")}
               </Button>
             </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Movements Table */}
-      <Card className="border shadow-sm">
+      {/* Audit Movements Table */}
+      <Card className="shadow-sm border">
         <CardHeader className="border-b pb-4 bg-muted/20">
-          <CardTitle className="text-base font-semibold">
-            {t("mov_table_title")} ({filteredMovements.length})
-          </CardTitle>
+          <CardTitle className="text-base font-semibold">{t("mov_table_title")}</CardTitle>
           <CardDescription className="text-xs">
             {t("mov_table_desc")}
           </CardDescription>
@@ -273,7 +269,6 @@ export function MovementsClient({ initialMovements, error }: MovementsClientProp
                   <th className="px-5 py-3">{isAmharic ? "እህል / ምርት" : "Commodity"}</th>
                   <th className="px-5 py-3 text-center">{t("mov_direction")}</th>
                   <th className="px-5 py-3 text-right">{t("common_quantity")}</th>
-                  <th className="px-5 py-3 text-right">{t("inv_base_grams")}</th>
                   <th className="px-5 py-3">{t("mov_type_ref")}</th>
                   <th className="px-5 py-3">{t("mov_audit_notes")}</th>
                 </tr>
@@ -316,12 +311,6 @@ export function MovementsClient({ initialMovements, error }: MovementsClientProp
                         <span className={isInbound ? "text-emerald-700 dark:text-emerald-400" : "text-red-600 dark:text-red-400"}>
                           {isInbound ? "+" : "-"}
                           {formatQuantity(Math.abs(m.original_quantity), m.unit?.symbol || "")}
-                        </span>
-                      </td>
-
-                      <td className="px-5 py-3.5 text-right font-mono text-muted-foreground">
-                        <span className={isInbound ? "text-emerald-700 dark:text-emerald-400" : "text-red-600 dark:text-red-400"}>
-                          {isInbound ? "+" : ""}{formatQuantity(g, "g")}
                         </span>
                       </td>
 

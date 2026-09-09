@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { ProductsClient } from "./ProductsClient";
 import type { Product, Unit } from "@/types/database";
+import { STANDARD_UNITS } from "@/lib/constants/units";
 
 export const revalidate = 0;
 
@@ -33,8 +34,10 @@ export default async function ProductsPage() {
       .select("*")
       .order("conversion_factor", { ascending: true });
 
-    if (unitsData) {
+    if (unitsData && unitsData.length > 0) {
       units = unitsData;
+    } else {
+      units = STANDARD_UNITS;
     }
 
     // Fetch products

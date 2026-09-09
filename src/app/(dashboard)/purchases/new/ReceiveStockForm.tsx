@@ -66,7 +66,7 @@ export function ReceiveStockForm({
       unitId: defaultUnit?.id || "",
       quantity: 1,
       unitCost: defaultProduct
-        ? Number((defaultProduct.cost_price_per_base_unit * (defaultUnit?.conversion_factor || 1000)).toFixed(2))
+        ? Number(defaultProduct.cost_price_per_base_unit)
         : 100,
     },
   ]);
@@ -93,24 +93,14 @@ export function ReceiveStockForm({
       const copy = [...prev];
       const current = { ...copy[index], [field]: value };
 
-      // If product changed, auto-suggest default unit
+      // If product changed, auto-suggest default unit and cost
       if (field === "productId") {
         const prod = products.find((p) => p.id === value);
         if (prod?.default_unit_id) {
           current.unitId = prod.default_unit_id;
-          const u = units.find((x) => x.id === prod.default_unit_id);
-          if (u && prod.cost_price_per_base_unit > 0) {
-            current.unitCost = Number((prod.cost_price_per_base_unit * u.conversion_factor).toFixed(2));
-          }
         }
-      }
-
-      // If unit changed, adjust suggested unit cost
-      if (field === "unitId") {
-        const prod = products.find((p) => p.id === current.productId);
-        const u = units.find((x) => x.id === value);
-        if (prod && u && prod.cost_price_per_base_unit > 0) {
-          current.unitCost = Number((prod.cost_price_per_base_unit * u.conversion_factor).toFixed(2));
+        if (prod && prod.cost_price_per_base_unit > 0) {
+          current.unitCost = Number(prod.cost_price_per_base_unit);
         }
       }
 
@@ -121,14 +111,12 @@ export function ReceiveStockForm({
 
   // Live Totals calculation
   let totalCost = 0;
-  let totalGrams = 0;
+  let totalQuantity = 0;
 
   items.forEach((item) => {
     const lineTotal = (item.quantity || 0) * (item.unitCost || 0);
     totalCost += lineTotal;
-    const u = units.find((x) => x.id === item.unitId);
-    const factor = u?.conversion_factor || 1;
-    totalGrams += (item.quantity || 0) * factor;
+    totalQuantity += Number(item.quantity || 0);
   });
 
   async function handleSubmit(e: React.FormEvent) {
@@ -310,7 +298,6 @@ export function ReceiveStockForm({
                   <th className="px-4 py-3 min-w-[140px]">{t("purch_unit_col")}</th>
                   <th className="px-4 py-3 w-32">{t("purch_qty_col")}</th>
                   <th className="px-4 py-3 w-36">{t("purch_unit_cost_col")}</th>
-                  <th className="px-4 py-3 text-right min-w-[140px]">{t("inv_base_grams")}</th>
                   <th className="px-4 py-3 text-right min-w-[130px]">{t("purch_line_total_col")}</th>
                   <th className="px-4 py-3 w-12 text-center"></th>
                 </tr>
@@ -318,9 +305,6 @@ export function ReceiveStockForm({
               <tbody className="divide-y">
                 {items.map((item, index) => {
                   const selectedProd = products.find((p) => p.id === item.productId);
-                  const selectedU = units.find((u) => u.id === item.unitId);
-                  const factor = selectedU?.conversion_factor || 1;
-                  const rowGrams = (item.quantity || 0) * factor;
                   const lineTotal = (item.quantity || 0) * (item.unitCost || 0);
 
                   return (
@@ -387,11 +371,6 @@ export function ReceiveStockForm({
                         />
                       </td>
 
-                      {/* Base Unit Grams calculation */}
-                      <td className="px-4 py-3 text-right font-mono text-xs text-muted-foreground">
-                        {formatQuantity(rowGrams, "g")}
-                      </td>
-
                       {/* Line Total */}
                       <td className="px-4 py-3 text-right font-bold text-foreground">
                         {formatETB(lineTotal)}
@@ -441,9 +420,9 @@ export function ReceiveStockForm({
                 </span>
               </div>
               <div className="flex justify-between text-xs text-muted-foreground">
-                <span>{t("common_weight")}:</span>
+                <span>{t("common_quantity")}:</span>
                 <span className="font-mono font-semibold text-amber-700 dark:text-amber-400">
-                  {formatQuantity(totalGrams, "g")}
+                  {totalQuantity} {language === "am" ? "አሃዶች" : "Units"}
                 </span>
               </div>
               <div className="border-t pt-2 flex justify-between items-center text-sm font-bold">

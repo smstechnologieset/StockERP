@@ -47,10 +47,10 @@ export function PricingClient({ initialProducts }: PricingClientProps) {
   const [priceMap, setPriceMap] = useState<Record<string, RowPriceState>>(() => {
     const map: Record<string, RowPriceState> = {};
     initialProducts.forEach((p) => {
-      const factor = p.default_unit?.conversion_factor || 1000;
+      const factor = p.default_unit?.conversion_factor || 1;
       map[p.id] = {
-        costDisplay: Number((p.cost_price_per_base_unit * factor).toFixed(2)),
-        sellDisplay: Number((p.selling_price_per_base_unit * factor).toFixed(2)),
+        costDisplay: factor === 1 ? Number(p.cost_price_per_base_unit) : Number((p.cost_price_per_base_unit * factor).toFixed(2)),
+        sellDisplay: factor === 1 ? Number(p.selling_price_per_base_unit) : Number((p.selling_price_per_base_unit * factor).toFixed(2)),
         isDirty: false,
       };
     });
@@ -90,15 +90,15 @@ export function PricingClient({ initialProducts }: PricingClientProps) {
     setErrorNotice(null);
     setSuccessNotice(null);
 
-    const factor = product.default_unit?.conversion_factor || 1000;
-    const costPerGram = factor > 0 ? row.costDisplay / factor : 0;
-    const sellPerGram = factor > 0 ? row.sellDisplay / factor : 0;
+    const factor = product.default_unit?.conversion_factor || 1;
+    const costPrice = factor === 1 ? row.costDisplay : (factor > 0 ? row.costDisplay / factor : 0);
+    const sellPrice = factor === 1 ? row.sellDisplay : (factor > 0 ? row.sellDisplay / factor : 0);
 
     const res = await updateProductPricesAction([
       {
         id: product.id,
-        cost_price_per_base_unit: costPerGram,
-        selling_price_per_base_unit: sellPerGram,
+        cost_price_per_base_unit: costPrice,
+        selling_price_per_base_unit: sellPrice,
       },
     ]);
 
@@ -129,11 +129,11 @@ export function PricingClient({ initialProducts }: PricingClientProps) {
       .filter((p) => priceMap[p.id]?.isDirty)
       .map((p) => {
         const row = priceMap[p.id];
-        const factor = p.default_unit?.conversion_factor || 1000;
+        const factor = p.default_unit?.conversion_factor || 1;
         return {
           id: p.id,
-          cost_price_per_base_unit: factor > 0 ? row.costDisplay / factor : 0,
-          selling_price_per_base_unit: factor > 0 ? row.sellDisplay / factor : 0,
+          cost_price_per_base_unit: factor === 1 ? row.costDisplay : (factor > 0 ? row.costDisplay / factor : 0),
+          selling_price_per_base_unit: factor === 1 ? row.sellDisplay : (factor > 0 ? row.sellDisplay / factor : 0),
         };
       });
 
