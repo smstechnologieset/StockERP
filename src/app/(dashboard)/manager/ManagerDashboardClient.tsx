@@ -5,33 +5,97 @@ import {
   Wheat,
   TrendingUp,
   AlertTriangle,
-  Scale,
-  Users,
-  BarChart3,
-  Store,
   DollarSign,
   ArrowUpRight,
   ShieldCheck,
-  Package,
+  ShoppingCart,
+  Truck,
+  Sliders,
+  Clock,
+  CheckCircle2,
 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { formatETB, formatQuantity } from "@/lib/utils";
+import { formatETB } from "@/lib/utils";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
+
+export interface DashboardActivity {
+  id: string;
+  type: "sale" | "purchase" | "adjustment";
+  title: string;
+  description: string;
+  amount?: number;
+  quantity?: string;
+  paymentMethod?: string;
+  timestamp: string;
+  link: string;
+}
 
 interface ManagerDashboardClientProps {
   displayItems: any[];
   valuation: number;
   lowStockList: any[];
+  totalSalesRevenue: number;
+  totalSalesCount: number;
+  recentActivities: DashboardActivity[];
 }
 
 export function ManagerDashboardClient({
   displayItems,
   valuation,
   lowStockList,
+  totalSalesRevenue,
+  totalSalesCount,
+  recentActivities,
 }: ManagerDashboardClientProps) {
   const { t, isAmharic } = useLanguage();
+
+  const formatTimestamp = (ts: string) => {
+    try {
+      const d = new Date(ts);
+      if (isNaN(d.getTime())) return ts;
+      return d.toLocaleString(isAmharic ? "am-ET" : "en-US", {
+        month: "short",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+    } catch {
+      return ts;
+    }
+  };
+
+  const getPaymentBadge = (method?: string) => {
+    if (!method) return null;
+    const m = method.toLowerCase();
+    if (m === "cash") {
+      return (
+        <Badge variant="outline" className="text-[10px] bg-emerald-50 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400 border-emerald-300">
+          {isAmharic ? "ጥሬ ገንዘብ" : "Cash"}
+        </Badge>
+      );
+    }
+    if (m === "telebirr") {
+      return (
+        <Badge variant="outline" className="text-[10px] bg-blue-50 text-blue-700 dark:bg-blue-950/30 dark:text-blue-400 border-blue-300">
+          Telebirr
+        </Badge>
+      );
+    }
+    if (m === "credit") {
+      return (
+        <Badge variant="outline" className="text-[10px] bg-red-50 text-red-700 dark:bg-red-950/30 dark:text-red-400 border-red-300">
+          {isAmharic ? "በብድር" : "Credit"}
+        </Badge>
+      );
+    }
+    return (
+      <Badge variant="outline" className="text-[10px]">
+        {method}
+      </Badge>
+    );
+  };
 
   return (
     <div className="space-y-8">
@@ -53,9 +117,9 @@ export function ManagerDashboardClient({
         </div>
       </div>
 
-      {/* KPI Cards Strip */}
+      {/* KPI Cards Strip - Exactly 4 Essential Cards */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {/* KPI 1: Live Stock Valuation */}
+        {/* KPI 1: Total Stock Valuation */}
         <Card className="border-amber-600/20 shadow-sm bg-gradient-to-br from-amber-500/5 via-card to-card">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
@@ -75,7 +139,7 @@ export function ManagerDashboardClient({
           </CardContent>
         </Card>
 
-        {/* KPI 2: Low Stock Alert Trigger */}
+        {/* KPI 2: Low-Stock Warnings */}
         <Card className={`shadow-sm ${lowStockList.length > 0 ? "border-red-500/40 bg-red-50/20" : "border"}`}>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
@@ -95,7 +159,7 @@ export function ManagerDashboardClient({
           </CardContent>
         </Card>
 
-        {/* KPI 3: Commodity Catalog Size */}
+        {/* KPI 3: Commodities Tracked */}
         <Card className="shadow-sm border">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
@@ -110,27 +174,27 @@ export function ManagerDashboardClient({
               {displayItems.length} {t("common_products_count")}
             </div>
             <p className="text-[11px] text-muted-foreground mt-1">
-              {t("common_across_branch")}
+              {isAmharic ? "በሱቁ የተመዘገቡ ንቁ ምርቶች" : "Active commodities in inventory"}
             </p>
           </CardContent>
         </Card>
 
-        {/* KPI 4: Store Status */}
-        <Card className="shadow-sm border">
+        {/* KPI 4: Total Sale done */}
+        <Card className="border-emerald-600/20 shadow-sm bg-gradient-to-br from-emerald-500/5 via-card to-card">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              {isAmharic ? "የሱቁ የስራ ሁኔታ" : "Store Status"}
+              {t("dash_total_sales_done")}
             </CardTitle>
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-600/10 text-emerald-600">
-              <Store className="h-4 w-4" />
+              <TrendingUp className="h-4 w-4" />
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold font-heading text-emerald-700 dark:text-emerald-400 truncate">
-              {isAmharic ? "ክፍት / ንቁ" : "Open & Active"}
+            <div className="text-2xl font-bold font-heading text-emerald-700 dark:text-emerald-400">
+              {formatETB(totalSalesRevenue)}
             </div>
             <p className="text-[11px] text-muted-foreground mt-1">
-              {t("app_subtitle")}
+              {totalSalesCount} {t("dash_total_sales_count")}
             </p>
           </CardContent>
         </Card>
@@ -141,7 +205,7 @@ export function ManagerDashboardClient({
         <Card className="border-red-500/30 bg-red-50/30 dark:bg-red-950/20 p-4">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-red-500/10 text-red-600">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-red-500/10 text-red-600 shrink-0">
                 <AlertTriangle className="h-5 w-5" />
               </div>
               <div>
@@ -162,165 +226,144 @@ export function ManagerDashboardClient({
         </Card>
       )}
 
-      {/* Quick Access Action Tiles */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Link href="/products" className="group block">
-          <Card className="h-full border hover:border-amber-600/60 hover:shadow-md transition-all">
-            <CardHeader className="p-4 pb-2">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-sm font-semibold text-foreground">
-                  {t("nav_products")}
-                </CardTitle>
-                <Wheat className="h-4 w-4 text-amber-600 group-hover:scale-110 transition-transform" />
-              </div>
-            </CardHeader>
-            <CardContent className="p-4 pt-1">
-              <p className="text-xs text-muted-foreground mb-2">
-                {t("prod_catalog_desc")}
-              </p>
-              <span className="text-xs font-semibold text-amber-700 dark:text-amber-400 flex items-center group-hover:underline">
-                {t("btn_show_all")} <ArrowUpRight className="ml-1 h-3 w-3" />
-              </span>
-            </CardContent>
-          </Card>
-        </Link>
-
-        <Link href="/products/pricing" className="group block">
-          <Card className="h-full border hover:border-amber-600/60 hover:shadow-md transition-all">
-            <CardHeader className="p-4 pb-2">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-sm font-semibold text-foreground">
-                  {t("nav_pricing")}
-                </CardTitle>
-                <TrendingUp className="h-4 w-4 text-amber-600 group-hover:scale-110 transition-transform" />
-              </div>
-            </CardHeader>
-            <CardContent className="p-4 pt-1">
-              <p className="text-xs text-muted-foreground mb-2">
-                {t("pricing_page_subtitle")}
-              </p>
-              <span className="text-xs font-semibold text-amber-700 dark:text-amber-400 flex items-center group-hover:underline">
-                {t("pricing_page_title")} <ArrowUpRight className="ml-1 h-3 w-3" />
-              </span>
-            </CardContent>
-          </Card>
-        </Link>
-
-        <Link href="/credit" className="group block">
-          <Card className="h-full border hover:border-amber-600/60 hover:shadow-md transition-all">
-            <CardHeader className="p-4 pb-2">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-sm font-semibold text-foreground">
-                  {t("nav_credit")}
-                </CardTitle>
-                <DollarSign className="h-4 w-4 text-amber-600 group-hover:scale-110 transition-transform" />
-              </div>
-            </CardHeader>
-            <CardContent className="p-4 pt-1">
-              <p className="text-xs text-muted-foreground mb-2">
-                {t("credit_page_subtitle")}
-              </p>
-              <span className="text-xs font-semibold text-amber-700 dark:text-amber-400 flex items-center group-hover:underline">
-                {t("btn_manage_credit")} <ArrowUpRight className="ml-1 h-3 w-3" />
-              </span>
-            </CardContent>
-          </Card>
-        </Link>
-
-        <Link href="/reports" className="group block">
-          <Card className="h-full border hover:border-amber-600/60 hover:shadow-md transition-all">
-            <CardHeader className="p-4 pb-2">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-sm font-semibold text-foreground">
-                  {t("nav_reports")}
-                </CardTitle>
-                <BarChart3 className="h-4 w-4 text-amber-600 group-hover:scale-110 transition-transform" />
-              </div>
-            </CardHeader>
-            <CardContent className="p-4 pt-1">
-              <p className="text-xs text-muted-foreground mb-2">
-                {t("reports_subtitle")}
-              </p>
-              <span className="text-xs font-semibold text-amber-700 dark:text-amber-400 flex items-center group-hover:underline">
-                {t("nav_reports")} <ArrowUpRight className="ml-1 h-3 w-3" />
-              </span>
-            </CardContent>
-          </Card>
-        </Link>
-      </div>
-
-      {/* Stock Valuation Breakdown Table */}
+      {/* Recent Activities Done Section */}
       <Card className="shadow-sm border">
-        <CardHeader className="flex flex-row items-center justify-between border-b pb-4">
+        <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b pb-4">
           <div>
-            <CardTitle className="text-lg">{t("dash_valuation_table_title")}</CardTitle>
-            <CardDescription className="text-xs">
-              {t("dash_valuation_table_desc")}
+            <div className="flex items-center gap-2">
+              <CardTitle className="text-lg font-bold">
+                {t("dash_recent_activities_title")}
+              </CardTitle>
+              <Badge variant="secondary" className="text-[11px] bg-primary/10 text-primary">
+                {recentActivities.length}
+              </Badge>
+            </div>
+            <CardDescription className="text-xs mt-1">
+              {t("dash_recent_activities_desc")}
             </CardDescription>
           </div>
-          <Link href="/inventory">
-            <Button variant="outline" size="sm" className="text-xs">
-              {t("btn_full_ledger_view")}
-            </Button>
-          </Link>
+          <div className="flex items-center gap-2">
+            <Link href="/sales">
+              <Button variant="outline" size="sm" className="text-xs gap-1">
+                <ShoppingCart className="h-3.5 w-3.5" />
+                {t("btn_view_sales_log")}
+              </Button>
+            </Link>
+            <Link href="/inventory/movements">
+              <Button variant="outline" size="sm" className="text-xs gap-1">
+                <Sliders className="h-3.5 w-3.5" />
+                {isAmharic ? "የእንቅስቃሴዎች መዝገብ" : "Movements Log"}
+              </Button>
+            </Link>
+          </div>
         </CardHeader>
         <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead className="bg-muted/40 text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b">
-                <tr>
-                  <th className="px-6 py-3.5">{t("prod_name_col")}</th>
-                  <th className="px-6 py-3.5">{t("prod_category_col")}</th>
-                  <th className="px-6 py-3.5 text-right">{t("inv_on_hand_display")}</th>
-                  <th className="px-6 py-3.5 text-right">{t("prod_cost_col")}</th>
-                  <th className="px-6 py-3.5 text-right">{t("stock_current_valuation")}</th>
-                  <th className="px-6 py-3.5 text-center">{t("common_status")}</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y">
-                {displayItems.map((item) => {
-                  const factor = item.default_unit_factor || 1;
-                  const costPerUnit = factor === 1 ? (item.cost_price_per_base_unit || 0) : (item.cost_price_per_base_unit || 0) * factor;
+          {recentActivities.length === 0 ? (
+            <div className="p-12 text-center">
+              <Clock className="h-10 w-10 mx-auto text-muted-foreground/50 mb-3" />
+              <p className="text-sm font-medium text-muted-foreground">
+                {t("dash_no_activities")}
+              </p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-sm">
+                <thead className="bg-muted/40 text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b">
+                  <tr>
+                    <th className="px-6 py-3.5">{t("dash_activity_type")}</th>
+                    <th className="px-6 py-3.5">{t("dash_activity_details")}</th>
+                    <th className="px-6 py-3.5 text-right">{t("dash_activity_amount")}</th>
+                    <th className="px-6 py-3.5 text-right">{t("dash_activity_time")}</th>
+                    <th className="px-6 py-3.5 text-center">{t("common_actions")}</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y">
+                  {recentActivities.map((act) => {
+                    const isSale = act.type === "sale";
+                    const isPurchase = act.type === "purchase";
+                    const isAdjustment = act.type === "adjustment";
 
-                  return (
-                    <tr key={item.product_id} className="hover:bg-muted/30 transition-colors">
-                      <td className="px-6 py-4 font-medium text-foreground">
-                        {item.product_name}
-                      </td>
-                      <td className="px-6 py-4 text-xs text-muted-foreground">
-                        {item.product_category}
-                      </td>
-                      <td className="px-6 py-4 text-right font-semibold text-foreground">
-                        {formatQuantity(
-                          item.default_unit_factor === 1 ? item.current_stock_base_units : item.current_stock_default_unit,
-                          item.default_unit_symbol
-                        )}
-                      </td>
-                      <td className="px-6 py-4 text-right text-xs text-foreground">
-                        {formatETB(costPerUnit)} / {item.default_unit_symbol}
-                      </td>
-                      <td className="px-6 py-4 text-right font-bold text-amber-900 dark:text-amber-300">
-                        {formatETB(item.current_valuation_etb || 0)}
-                      </td>
-                      <td className="px-6 py-4 text-center">
-                        {item.is_low_stock ? (
-                          <Badge variant="warning" className="gap-1 text-[10px]">
-                            <AlertTriangle className="h-3 w-3" /> {t("stock_reorder_needed")}
-                          </Badge>
-                        ) : (
-                          <Badge variant="success" className="text-[10px]">
-                            {t("stock_in_stock")}
-                          </Badge>
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+                    return (
+                      <tr key={act.id} className="hover:bg-muted/30 transition-colors">
+                        {/* Type Badge */}
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          {isSale && (
+                            <Badge variant="outline" className="gap-1.5 py-1 px-2.5 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400 border-emerald-300">
+                              <ShoppingCart className="h-3 w-3" />
+                              {t("dash_activity_sale")}
+                            </Badge>
+                          )}
+                          {isPurchase && (
+                            <Badge variant="outline" className="gap-1.5 py-1 px-2.5 bg-sky-50 text-sky-700 dark:bg-sky-950/30 dark:text-sky-400 border-sky-300">
+                              <Truck className="h-3 w-3" />
+                              {t("dash_activity_purchase")}
+                            </Badge>
+                          )}
+                          {isAdjustment && (
+                            <Badge variant="outline" className="gap-1.5 py-1 px-2.5 bg-amber-50 text-amber-700 dark:bg-amber-950/30 dark:text-amber-400 border-amber-300">
+                              <Sliders className="h-3 w-3" />
+                              {t("dash_activity_adjustment")}
+                            </Badge>
+                          )}
+                        </td>
+
+                        {/* Details */}
+                        <td className="px-6 py-4">
+                          <div className="flex flex-col gap-0.5">
+                            <div className="flex items-center gap-2">
+                              <span className="font-semibold text-foreground">
+                                {act.title}
+                              </span>
+                              {getPaymentBadge(act.paymentMethod)}
+                            </div>
+                            <span className="text-xs text-muted-foreground">
+                              {act.description}
+                            </span>
+                          </div>
+                        </td>
+
+                        {/* Amount / Impact */}
+                        <td className="px-6 py-4 text-right whitespace-nowrap">
+                          {isSale && (
+                            <span className="font-bold text-emerald-700 dark:text-emerald-400">
+                              +{formatETB(act.amount || 0)}
+                            </span>
+                          )}
+                          {isPurchase && (
+                            <span className="font-bold text-sky-700 dark:text-sky-400">
+                              {formatETB(act.amount || 0)}
+                            </span>
+                          )}
+                          {isAdjustment && (
+                            <span className="font-semibold text-amber-700 dark:text-amber-400">
+                              {act.quantity || "—"}
+                            </span>
+                          )}
+                        </td>
+
+                        {/* Time */}
+                        <td className="px-6 py-4 text-right text-xs text-muted-foreground whitespace-nowrap">
+                          {formatTimestamp(act.timestamp)}
+                        </td>
+
+                        {/* Action Link */}
+                        <td className="px-6 py-4 text-center whitespace-nowrap">
+                          <Link href={act.link}>
+                            <Button variant="ghost" size="sm" className="h-8 px-2 text-xs text-primary hover:text-primary hover:bg-primary/10">
+                              <ArrowUpRight className="h-3.5 w-3.5" />
+                            </Button>
+                          </Link>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
   );
 }
+
