@@ -20,7 +20,7 @@ interface StaffDashboardClientProps {
 }
 
 export function StaffDashboardClient({ displayProducts }: StaffDashboardClientProps) {
-  const { t } = useLanguage();
+  const { t, tCategory } = useLanguage();
 
   return (
     <div className="space-y-8">
@@ -144,7 +144,7 @@ export function StaffDashboardClient({ displayProducts }: StaffDashboardClientPr
                       {p.product_name}
                     </td>
                     <td className="px-6 py-4 text-xs text-muted-foreground">
-                      {p.product_category}
+                      {tCategory(p.product_category)}
                     </td>
                     <td className="px-6 py-4 text-right font-semibold text-foreground">
                       {formatQuantity(

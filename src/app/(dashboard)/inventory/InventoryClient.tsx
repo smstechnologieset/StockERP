@@ -32,6 +32,7 @@ import {
 import { formatETB, formatQuantity } from "@/lib/utils";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 import { recordStockAdjustmentAction } from "@/app/actions/inventory";
+import { mergeWithStandardUnits } from "@/lib/constants/units";
 import type { ProductCurrentStockView, Unit } from "@/types/database";
 
 interface InventoryClientProps {
@@ -42,11 +43,12 @@ interface InventoryClientProps {
 
 export function InventoryClient({
   initialInventory,
-  units,
+  units: propUnits,
   initialFilter,
 }: InventoryClientProps) {
   const router = useRouter();
-  const { t, isAmharic, language } = useLanguage();
+  const { t, tCategory, isAmharic, language } = useLanguage();
+  const units = mergeWithStandardUnits(propUnits);
 
   const [search, setSearch] = useState("");
   const [filterLowStock, setFilterLowStock] = useState(initialFilter === "low-stock");
@@ -55,7 +57,7 @@ export function InventoryClient({
   const [adjustModalOpen, setAdjustModalOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<ProductCurrentStockView | null>(null);
   const [adjustmentType, setAdjustmentType] = useState<"in" | "out">("out");
-  const [quantity, setQuantity] = useState<number>(1);
+  const [quantity, setQuantity] = useState<number | string>(1);
   const [unitId, setUnitId] = useState<string>("");
   const [reason, setReason] = useState<string>("");
   const [submitting, setSubmitting] = useState(false);
@@ -100,7 +102,8 @@ export function InventoryClient({
     e.preventDefault();
     if (!selectedProduct) return;
 
-    if (!quantity || quantity <= 0) {
+    const qtyNum = Number(quantity) || 0;
+    if (qtyNum <= 0) {
       setErrorMsg(language === "am" ? "መጠኑ ከ0 በላይ መሆን አለበት።" : "Quantity must be greater than 0.");
       return;
     }
@@ -116,7 +119,7 @@ export function InventoryClient({
     const res = await recordStockAdjustmentAction({
       product_id: selectedProduct.product_id,
       adjustment_type: adjustmentType,
-      quantity: quantity,
+      quantity: qtyNum,
       unit_id: unitId || selectedProduct.default_unit_id || units[0]?.id || "",
       reason: reason,
     });
@@ -275,7 +278,7 @@ export function InventoryClient({
                       )}
                     </td>
                     <td className="px-5 py-3.5 text-muted-foreground">
-                      {item.product_category}
+                      {tCategory(item.product_category)}
                     </td>
                     <td className="px-5 py-3.5 text-right font-bold text-sm text-foreground">
                       {formatQuantity(
@@ -402,7 +405,8 @@ export function InventoryClient({
                     step="any"
                     min="0.001"
                     value={quantity}
-                    onChange={(e) => setQuantity(parseFloat(e.target.value) || 0)}
+                    onFocus={(e) => e.target.select()}
+                    onChange={(e) => setQuantity(e.target.value)}
                     className="h-9 text-xs"
                     required
                   />

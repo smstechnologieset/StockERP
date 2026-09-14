@@ -25,13 +25,13 @@ export function UnitsClient({ initialUnits, isManager }: UnitsClientProps) {
   const [editingUnit, setEditingUnit] = useState<Unit | null>(null);
 
   // Unit Converter Interactive Tool State
-  const [calcQuantity, setCalcQuantity] = useState<number>(1);
+  const [calcQuantity, setCalcQuantity] = useState<number | string>(1);
   const [calcUnitId, setCalcUnitId] = useState<string>(
     units.find((u) => u.symbol === "q")?.id || units[0]?.id || ""
   );
 
   const selectedCalcUnit = units.find((u) => u.id === calcUnitId) || units[0];
-  const gramsTotal = calcQuantity * (selectedCalcUnit?.conversion_factor || 1);
+  const gramsTotal = (Number(calcQuantity) || 0) * (selectedCalcUnit?.conversion_factor || 1);
 
   return (
     <div className="space-y-8">
@@ -81,7 +81,8 @@ export function UnitsClient({ initialUnits, isManager }: UnitsClientProps) {
                 type="number"
                 step="any"
                 value={calcQuantity}
-                onChange={(e) => setCalcQuantity(parseFloat(e.target.value) || 0)}
+                onFocus={(e) => e.target.select()}
+                onChange={(e) => setCalcQuantity(e.target.value)}
               />
             </div>
             <div className="space-y-1.5">

@@ -34,9 +34,8 @@ export async function updateSession(request: NextRequest) {
 
   // If user is accessing protected routes without session, redirect to login
   const isAuthRoute = url.pathname.startsWith("/login");
-  const isDashboardRoute = url.pathname.startsWith("/staff") || url.pathname.startsWith("/manager");
 
-  if (!user && isDashboardRoute) {
+  if (!user && !isAuthRoute) {
     url.pathname = "/login";
     return NextResponse.redirect(url);
   }
@@ -57,8 +56,16 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // If user is staff but trying to access manager route, redirect to staff
-  if (user && url.pathname.startsWith("/manager")) {
+  // If user is staff but trying to access manager-only routes, redirect to staff
+  const isManagerOnlyRoute =
+    url.pathname.startsWith("/manager") ||
+    url.pathname.startsWith("/products") ||
+    url.pathname.startsWith("/suppliers") ||
+    url.pathname.startsWith("/reports") ||
+    url.pathname.startsWith("/users") ||
+    url.pathname.startsWith("/units");
+
+  if (user && isManagerOnlyRoute) {
     const { data: profile } = await supabase
       .from("profiles")
       .select("role")

@@ -79,19 +79,24 @@ export function ReportsClient({
   creditOutstanding = 0,
   creditCollected = 0,
 }: ReportsClientProps) {
-  const { t, language } = useLanguage();
+  const { t, tCategory, language } = useLanguage();
 
   // Range state: "day" | "week" | "month" | "custom"
   const [timeRange, setTimeRange] = useState<"day" | "week" | "month" | "custom">("week");
   
-  // Custom range date inputs (defaulting to the requested June 2nd – June 21st, 2026 example)
-  const [customStart, setCustomStart] = useState<string>("2026-06-02");
-  const [customEnd, setCustomEnd] = useState<string>("2026-06-21");
+  // Custom range date inputs (defaulting to start of current month until today)
+  const [customStart, setCustomStart] = useState<string>(() => {
+    const d = new Date();
+    d.setDate(1);
+    return d.toISOString().split("T")[0];
+  });
+  const [customEnd, setCustomEnd] = useState<string>(() => {
+    return new Date().toISOString().split("T")[0];
+  });
 
   // Determine active start and end date strings (YYYY-MM-DD)
   const { activeStart, activeEnd } = useMemo(() => {
-    // Current application anchor date: 2026-09-09
-    const today = new Date("2026-09-09T00:00:00");
+    const today = new Date();
     const formatDate = (d: Date) => d.toISOString().split("T")[0];
 
     if (timeRange === "day") {
@@ -110,10 +115,18 @@ export function ReportsClient({
     }
     // Custom range
     return {
-      activeStart: customStart || "2026-06-02",
-      activeEnd: customEnd || "2026-06-21",
+      activeStart: customStart || formatDate(today),
+      activeEnd: customEnd || formatDate(today),
     };
   }, [timeRange, customStart, customEnd]);
+
+  // Translate category valuation names
+  const translatedCategoryValuation = useMemo(() => {
+    return categoryValuation.map((cat) => ({
+      ...cat,
+      name: tCategory(cat.name),
+    }));
+  }, [categoryValuation, tCategory]);
 
   // Filter Sales within the active date range
   const filteredSales = useMemo(() => {
@@ -534,26 +547,8 @@ export function ReportsClient({
               </Button>
             </div>
 
-            {/* Quick Demo Preset Chips */}
+            {/* Quick Filter Chips */}
             <div className="flex flex-wrap items-center gap-1.5">
-              <span className="text-xs text-muted-foreground mr-1 hidden md:inline">
-                {language === "am" ? "ፈጣን ምሳሌዎች፡" : "Presets:"}
-              </span>
-              <Badge
-                variant="outline"
-                className={`cursor-pointer hover:bg-amber-500/20 text-xs py-1 transition-all ${
-                  timeRange === "custom" && customStart === "2026-06-02" && customEnd === "2026-06-21"
-                    ? "border-amber-600 bg-amber-500/15 text-amber-900 dark:text-amber-300 font-bold"
-                    : "text-muted-foreground"
-                }`}
-                onClick={() => {
-                  setTimeRange("custom");
-                  setCustomStart("2026-06-02");
-                  setCustomEnd("2026-06-21");
-                }}
-              >
-                📅 {t("reports_preset_june")}
-              </Badge>
               <Badge
                 variant="outline"
                 className={`cursor-pointer hover:bg-amber-500/20 text-xs py-1 transition-all ${
@@ -872,7 +867,7 @@ export function ReportsClient({
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie
-                      data={categoryValuation}
+                      data={translatedCategoryValuation}
                       cx="50%"
                       cy="50%"
                       innerRadius={55}
@@ -880,7 +875,7 @@ export function ReportsClient({
                       paddingAngle={4}
                       dataKey="value"
                     >
-                      {categoryValuation.map((entry, index) => (
+                      {translatedCategoryValuation.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={entry.color} />
                       ))}
                     </Pie>
@@ -894,7 +889,7 @@ export function ReportsClient({
                 </ResponsiveContainer>
               </div>
               <div className="grid grid-cols-2 gap-2 mt-4 pt-3 border-t text-xs">
-                {categoryValuation.map((cat) => (
+                {translatedCategoryValuation.map((cat) => (
                   <div key={cat.name} className="flex items-center gap-2">
                     <div
                       className="h-3 w-3 rounded-full shrink-0"

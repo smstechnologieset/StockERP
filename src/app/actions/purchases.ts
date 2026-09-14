@@ -17,6 +17,7 @@ export interface CreatePurchaseInput {
   purchase_date: string;
   invoice_reference?: string;
   notes?: string;
+  update_catalog_cost?: boolean;
   items: PurchaseItemInput[];
 }
 
@@ -107,15 +108,17 @@ export async function createPurchaseAction(input: CreatePurchaseInput) {
       throw new Error(`Failed to record stock ledger movements: ${ledgerError.message}`);
     }
 
-    // 4. Update products' cost_price_per_base_unit for valuation
-    for (const item of preparedItems) {
-      if (item.cost_per_base_unit > 0) {
-        await supabase
-          .from("products")
-          .update({
-            cost_price_per_base_unit: item.cost_per_base_unit,
-          })
-          .eq("id", item.product_id);
+    // 4. Update products' cost_price_per_base_unit ONLY if explicitly requested by manager
+    if (input.update_catalog_cost) {
+      for (const item of preparedItems) {
+        if (item.cost_per_base_unit > 0) {
+          await supabase
+            .from("products")
+            .update({
+              cost_price_per_base_unit: item.cost_per_base_unit,
+            })
+            .eq("id", item.product_id);
+        }
       }
     }
 

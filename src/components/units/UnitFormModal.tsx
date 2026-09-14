@@ -140,6 +140,7 @@ export function UnitFormModal({
               step="any"
               placeholder={language === "am" ? "ምሳሌ፡ 500 ለ500ግ፣ 50000 ለ50ኪ.ግ ጆንያ" : "e.g. 500 for 500g pouch, 50000 for 50kg sack"}
               {...register("conversion_factor")}
+              onFocus={(e) => e.target.select()}
             />
             {errors.conversion_factor && (
               <p className="text-[11px] text-red-600">

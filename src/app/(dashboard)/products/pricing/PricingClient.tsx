@@ -26,18 +26,19 @@ import type { Product, Unit } from "@/types/database";
 
 interface PricingClientProps {
   initialProducts: (Product & { default_unit?: Unit })[];
+  initialSearch?: string;
 }
 
 interface RowPriceState {
-  costDisplay: number;
-  sellDisplay: number;
+  costDisplay: number | string;
+  sellDisplay: number | string;
   isDirty: boolean;
 }
 
-export function PricingClient({ initialProducts }: PricingClientProps) {
+export function PricingClient({ initialProducts, initialSearch = "" }: PricingClientProps) {
   const router = useRouter();
-  const { t, isAmharic } = useLanguage();
-  const [search, setSearch] = useState("");
+  const { t, tCategory, isAmharic } = useLanguage();
+  const [search, setSearch] = useState(initialSearch);
   const [savingId, setSavingId] = useState<string | null>(null);
   const [savingAll, setSavingAll] = useState(false);
   const [successNotice, setSuccessNotice] = useState<string | null>(null);
@@ -67,7 +68,7 @@ export function PricingClient({ initialProducts }: PricingClientProps) {
   function handlePriceChange(
     productId: string,
     field: "costDisplay" | "sellDisplay",
-    value: number
+    value: number | string
   ) {
     setPriceMap((prev) => {
       const row = prev[productId] || { costDisplay: 0, sellDisplay: 0, isDirty: false };
@@ -91,8 +92,10 @@ export function PricingClient({ initialProducts }: PricingClientProps) {
     setSuccessNotice(null);
 
     const factor = product.default_unit?.conversion_factor || 1;
-    const costPrice = factor === 1 ? row.costDisplay : (factor > 0 ? row.costDisplay / factor : 0);
-    const sellPrice = factor === 1 ? row.sellDisplay : (factor > 0 ? row.sellDisplay / factor : 0);
+    const costNum = Number(row.costDisplay) || 0;
+    const sellNum = Number(row.sellDisplay) || 0;
+    const costPrice = factor === 1 ? costNum : (factor > 0 ? costNum / factor : 0);
+    const sellPrice = factor === 1 ? sellNum : (factor > 0 ? sellNum / factor : 0);
 
     const res = await updateProductPricesAction([
       {
@@ -130,10 +133,12 @@ export function PricingClient({ initialProducts }: PricingClientProps) {
       .map((p) => {
         const row = priceMap[p.id];
         const factor = p.default_unit?.conversion_factor || 1;
+        const costNum = Number(row.costDisplay) || 0;
+        const sellNum = Number(row.sellDisplay) || 0;
         return {
           id: p.id,
-          cost_price_per_base_unit: factor === 1 ? row.costDisplay : (factor > 0 ? row.costDisplay / factor : 0),
-          selling_price_per_base_unit: factor === 1 ? row.sellDisplay : (factor > 0 ? row.sellDisplay / factor : 0),
+          cost_price_per_base_unit: factor === 1 ? costNum : (factor > 0 ? costNum / factor : 0),
+          selling_price_per_base_unit: factor === 1 ? sellNum : (factor > 0 ? sellNum / factor : 0),
         };
       });
 
@@ -260,10 +265,12 @@ export function PricingClient({ initialProducts }: PricingClientProps) {
                 {filteredProducts.map((p) => {
                   const unitSymbol = p.default_unit?.symbol || "kg";
                   const row = priceMap[p.id] || { costDisplay: 0, sellDisplay: 0, isDirty: false };
-                  const marginEtb = Number((row.sellDisplay - row.costDisplay).toFixed(2));
+                  const costNum = Number(row.costDisplay) || 0;
+                  const sellNum = Number(row.sellDisplay) || 0;
+                  const marginEtb = Number((sellNum - costNum).toFixed(2));
                   const marginPct =
-                    row.sellDisplay > 0
-                      ? Number(((marginEtb / row.sellDisplay) * 100).toFixed(1))
+                    sellNum > 0
+                      ? Number(((marginEtb / sellNum) * 100).toFixed(1))
                       : 0;
 
                   return (
@@ -281,7 +288,7 @@ export function PricingClient({ initialProducts }: PricingClientProps) {
                           )}
                         </div>
                         <div className="text-[11px] text-muted-foreground">
-                          {p.category} {p.code ? `&bull; ${p.code}` : ""}
+                          {tCategory(p.category)} {p.code ? `&bull; ${p.code}` : ""}
                         </div>
                       </td>
 
@@ -298,11 +305,12 @@ export function PricingClient({ initialProducts }: PricingClientProps) {
                             step="0.01"
                             min="0"
                             value={row.costDisplay}
+                            onFocus={(e) => e.target.select()}
                             onChange={(e) =>
                               handlePriceChange(
                                 p.id,
                                 "costDisplay",
-                                parseFloat(e.target.value) || 0
+                                e.target.value
                               )
                             }
                             className="h-8 w-28 text-right font-mono text-xs"
@@ -318,11 +326,12 @@ export function PricingClient({ initialProducts }: PricingClientProps) {
                             step="0.01"
                             min="0"
                             value={row.sellDisplay}
+                            onFocus={(e) => e.target.select()}
                             onChange={(e) =>
                               handlePriceChange(
                                 p.id,
                                 "sellDisplay",
-                                parseFloat(e.target.value) || 0
+                                e.target.value
                               )
                             }
                             className="h-8 w-28 text-right font-mono text-xs font-bold text-amber-900 dark:text-amber-300"

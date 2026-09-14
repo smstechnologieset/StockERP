@@ -29,7 +29,7 @@ interface MovementsClientProps {
 }
 
 export function MovementsClient({ initialMovements, error }: MovementsClientProps) {
-  const { t, isAmharic } = useLanguage();
+  const { t, tCategory, isAmharic } = useLanguage();
   const [search, setSearch] = useState("");
   const [filterType, setFilterType] = useState<"all" | "inbound" | "outbound">("all");
 
@@ -290,7 +290,7 @@ export function MovementsClient({ initialMovements, error }: MovementsClientProp
                         </div>
                         {m.product?.category && (
                           <div className="text-[10px] text-muted-foreground">
-                            {m.product.category}
+                            {tCategory(m.product.category)}
                           </div>
                         )}
                       </td>

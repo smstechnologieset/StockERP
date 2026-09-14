@@ -56,7 +56,7 @@ export function CreditClient({ initialCredits, initialError }: CreditClientProps
   // Repayment Modal State
   const [repayModalOpen, setRepayModalOpen] = useState(false);
   const [selectedCredit, setSelectedCredit] = useState<CustomerCredit | null>(null);
-  const [paymentAmount, setPaymentAmount] = useState<number>(0);
+  const [paymentAmount, setPaymentAmount] = useState<number | string>(0);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("telebirr");
   const [referenceNote, setReferenceNote] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -146,12 +146,13 @@ export function CreditClient({ initialCredits, initialError }: CreditClientProps
     e.preventDefault();
     if (!selectedCredit) return;
 
-    if (!paymentAmount || paymentAmount <= 0) {
+    const payNum = Number(paymentAmount) || 0;
+    if (!payNum || payNum <= 0) {
       setRepayError("Payment amount must be greater than 0 ETB.");
       return;
     }
 
-    if (paymentAmount > Number(selectedCredit.remaining_balance)) {
+    if (payNum > Number(selectedCredit.remaining_balance)) {
       setRepayError(
         `Payment amount cannot exceed remaining balance of ${formatETB(selectedCredit.remaining_balance)}`
       );
@@ -163,7 +164,7 @@ export function CreditClient({ initialCredits, initialError }: CreditClientProps
 
     const res = await recordCreditPaymentAction({
       credit_id: selectedCredit.id,
-      amount: paymentAmount,
+      amount: payNum,
       payment_method: paymentMethod,
       reference_note: referenceNote || undefined,
     });
@@ -173,15 +174,15 @@ export function CreditClient({ initialCredits, initialError }: CreditClientProps
       setCredits((prev) =>
         prev.map((c) => {
           if (c.id === selectedCredit.id) {
-            const newPaid = Number((c.paid_amount + paymentAmount).toFixed(2));
-            const newRemaining = Number((c.remaining_balance - paymentAmount).toFixed(2));
+            const newPaid = Number((c.paid_amount + payNum).toFixed(2));
+            const newRemaining = Number((c.remaining_balance - payNum).toFixed(2));
             const newStatus = (newRemaining <= 0 ? "paid" : "partially_paid") as any;
             const newPayments = [
               ...(c.payments || []),
               {
                 id: res.paymentId || `temp-${Date.now()}`,
                 credit_id: c.id,
-                amount: paymentAmount,
+                amount: payNum,
                 payment_method: paymentMethod,
                 payment_date: new Date().toISOString(),
                 reference_note: referenceNote || null,
@@ -609,7 +610,8 @@ export function CreditClient({ initialCredits, initialError }: CreditClientProps
                   min="0.01"
                   max={Number(selectedCredit.remaining_balance)}
                   value={paymentAmount}
-                  onChange={(e) => setPaymentAmount(parseFloat(e.target.value) || 0)}
+                  onFocus={(e) => e.target.select()}
+                  onChange={(e) => setPaymentAmount(e.target.value)}
                   className="text-sm font-semibold"
                   required
                 />
@@ -617,7 +619,7 @@ export function CreditClient({ initialCredits, initialError }: CreditClientProps
                   {isAmharic ? "አዲስ የቀረ እዳ፡" : "New Remaining Debt:"}{" "}
                   <strong>
                     {formatETB(
-                      Math.max(0, Number(selectedCredit.remaining_balance) - paymentAmount)
+                      Math.max(0, Number(selectedCredit.remaining_balance) - (Number(paymentAmount) || 0))
                     )}
                   </strong>
                 </p>
@@ -687,8 +689,8 @@ export function CreditClient({ initialCredits, initialError }: CreditClientProps
                     </>
                   ) : (
                     isAmharic
-                      ? `ክፍያ አረጋግጥ (${formatETB(paymentAmount)})`
-                      : `Confirm Payment (${formatETB(paymentAmount)})`
+                      ? `ክፍያ አረጋግጥ (${formatETB(Number(paymentAmount) || 0)})`
+                      : `Confirm Payment (${formatETB(Number(paymentAmount) || 0)})`
                   )}
                 </Button>
               </DialogFooter>

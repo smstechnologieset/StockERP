@@ -2,14 +2,17 @@ import { Sidebar } from "@/components/navigation/Sidebar";
 import { Navbar } from "@/components/navigation/Navbar";
 import { createClient } from "@/lib/supabase/server";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export default async function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  let userRole: "owner_manager" | "staff" = "owner_manager";
-  let userName = "Abebe Kebede";
-  let userEmail = "manager@stockerp.et";
+  let userRole: "owner_manager" | "staff" = "staff";
+  let userName = "User";
+  let userEmail = "";
   let branchName = "Main Branch";
   let lowStockCount = 0;
 
@@ -20,7 +23,7 @@ export default async function DashboardLayout({
     } = await supabase.auth.getUser();
 
     if (user) {
-      userEmail = user.email || userEmail;
+      userEmail = user.email || "";
       const { data: profile } = await supabase
         .from("profiles")
         .select("full_name, role")
@@ -28,8 +31,10 @@ export default async function DashboardLayout({
         .single();
 
       if (profile) {
-        userName = profile.full_name || userName;
-        userRole = profile.role || userRole;
+        userName = profile.full_name || (user.email ? user.email.split("@")[0] : "User");
+        userRole = profile.role || "staff";
+      } else if (user.email) {
+        userName = user.email.split("@")[0];
       }
 
       // Check low stock count from view

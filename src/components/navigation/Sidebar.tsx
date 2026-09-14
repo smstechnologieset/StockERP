@@ -34,7 +34,7 @@ interface SidebarProps {
 export function Sidebar({
   userRole = "staff",
   userName = "Staff Member",
-  userEmail = "staff@stockerp.et",
+  userEmail = "",
   branchName = "Main Branch",
 }: SidebarProps) {
   const pathname = usePathname();

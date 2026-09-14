@@ -244,7 +244,7 @@ export function UsersClient({ initialUsers }: UsersClientProps) {
                       <td className="px-5 py-3.5 text-muted-foreground font-mono">
                         <div className="flex items-center gap-1.5">
                           <Mail className="h-3.5 w-3.5 text-muted-foreground" />
-                          <span>{u.email || "staff@stockerp.et"}</span>
+                          <span>{u.email || "—"}</span>
                         </div>
                       </td>
 

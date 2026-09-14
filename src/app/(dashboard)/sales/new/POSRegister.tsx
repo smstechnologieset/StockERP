@@ -25,18 +25,19 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { formatETB, formatQuantity } from "@/lib/utils";
+import { cn, formatETB, formatQuantity } from "@/lib/utils";
 import { createSaleAction } from "@/app/actions/sales";
 import type { Product, Unit, ProductCurrentStockView } from "@/types/database";
 
 import { useLanguage } from "@/lib/i18n/LanguageContext";
+import { mergeWithStandardUnits } from "@/lib/constants/units";
 
 interface CartItem {
   productId: string;
   productName: string;
   unitId: string;
-  quantity: number;
-  unitPrice: number;
+  quantity: number | string;
+  unitPrice: number | string;
   currentStockGrams: number;
 }
 
@@ -46,9 +47,10 @@ interface POSRegisterProps {
   stockView: ProductCurrentStockView[];
 }
 
-export function POSRegister({ products, units, stockView }: POSRegisterProps) {
+export function POSRegister({ products, units: propUnits, stockView }: POSRegisterProps) {
   const router = useRouter();
-  const { t, isAmharic, language } = useLanguage();
+  const { t, tCategory, isAmharic, language } = useLanguage();
+  const units = mergeWithStandardUnits(propUnits);
 
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
@@ -58,7 +60,7 @@ export function POSRegister({ products, units, stockView }: POSRegisterProps) {
   const [paymentMethod, setPaymentMethod] = useState<
     "cash" | "telebirr" | "cbe_birr" | "bank_transfer" | "credit"
   >("cash");
-  const [downPayment, setDownPayment] = useState<number>(0);
+  const [downPayment, setDownPayment] = useState<number | string>(0);
   const [downPaymentMethod, setDownPaymentMethod] = useState<
     "cash" | "telebirr" | "cbe_birr" | "bank_transfer"
   >("cash");
@@ -121,7 +123,7 @@ export function POSRegister({ products, units, stockView }: POSRegisterProps) {
       if (existing) {
         return prev.map((item) =>
           item.productId === product.id
-            ? { ...item, quantity: Number((item.quantity + 1).toFixed(3)) }
+            ? { ...item, quantity: Number(((Number(item.quantity) || 0) + 1).toFixed(3)) }
             : item
         );
       }
@@ -168,12 +170,14 @@ export function POSRegister({ products, units, stockView }: POSRegisterProps) {
   const insufficientProducts: string[] = [];
 
   cart.forEach((item) => {
-    const lineTotal = (item.quantity || 0) * (item.unitPrice || 0);
+    const qty = Number(item.quantity) || 0;
+    const price = Number(item.unitPrice) || 0;
+    const lineTotal = qty * price;
     cartTotal += lineTotal;
 
     const u = units.find((x) => x.id === item.unitId);
     const factor = u?.conversion_factor || 1;
-    const requestedGrams = (item.quantity || 0) * factor;
+    const requestedGrams = qty * factor;
 
     if (requestedGrams > item.currentStockGrams) {
       hasInsufficientStock = true;
@@ -216,8 +220,8 @@ export function POSRegister({ products, units, stockView }: POSRegisterProps) {
       payment_method: paymentMethod,
       manual_override: manualOverride,
       override_reason: manualOverride ? overrideReason : undefined,
-      down_payment_at_sale: paymentMethod === "credit" ? downPayment : undefined,
-      down_payment_method: paymentMethod === "credit" && downPayment > 0 ? downPaymentMethod : undefined,
+      down_payment_at_sale: paymentMethod === "credit" ? (Number(downPayment) || 0) : undefined,
+      down_payment_method: paymentMethod === "credit" && (Number(downPayment) || 0) > 0 ? downPaymentMethod : undefined,
       credit_due_date: paymentMethod === "credit" ? dueDate : undefined,
       credit_notes: paymentMethod === "credit" ? creditNotes : undefined,
       items: cart.map((item) => {
@@ -225,8 +229,8 @@ export function POSRegister({ products, units, stockView }: POSRegisterProps) {
         return {
           product_id: item.productId,
           unit_id: item.unitId,
-          quantity: Number(item.quantity),
-          unit_price: Number(item.unitPrice),
+          quantity: Number(item.quantity) || 0,
+          unit_price: Number(item.unitPrice) || 0,
           conversion_factor: u?.conversion_factor || 1,
         };
       }),
@@ -238,7 +242,7 @@ export function POSRegister({ products, units, stockView }: POSRegisterProps) {
       setSaleResult({
         invoiceNumber: res.invoiceNumber || "INV-NEW",
         totalAmount: res.totalAmount || cartTotal,
-        creditRemaining: paymentMethod === "credit" ? Math.max(0, cartTotal - downPayment) : undefined,
+        creditRemaining: paymentMethod === "credit" ? Math.max(0, cartTotal - (Number(downPayment) || 0)) : undefined,
         isCredit: paymentMethod === "credit",
       });
       setCart([]);
@@ -366,7 +370,7 @@ export function POSRegister({ products, units, stockView }: POSRegisterProps) {
                   onClick={() => setSelectedCategory(c)}
                   className="text-xs h-9 whitespace-nowrap"
                 >
-                  {c}
+                  {tCategory(c)}
                 </Button>
               ))}
             </div>
@@ -397,7 +401,7 @@ export function POSRegister({ products, units, stockView }: POSRegisterProps) {
                           {p.name}
                         </CardTitle>
                         <CardDescription className="text-[11px] text-muted-foreground">
-                          {p.category}
+                          {tCategory(p.category)}
                         </CardDescription>
                       </div>
                       <Badge
@@ -463,8 +467,8 @@ export function POSRegister({ products, units, stockView }: POSRegisterProps) {
                 {cart.map((item, index) => {
                   const u = units.find((x) => x.id === item.unitId);
                   const factor = u?.conversion_factor || 1;
-                  const itemGrams = item.quantity * factor;
-                  const lineTotal = item.quantity * item.unitPrice;
+                  const itemGrams = (Number(item.quantity) || 0) * factor;
+                  const lineTotal = (Number(item.quantity) || 0) * (Number(item.unitPrice) || 0);
                   const isNegative = itemGrams > item.currentStockGrams;
 
                   return (
@@ -520,11 +524,12 @@ export function POSRegister({ products, units, stockView }: POSRegisterProps) {
                             step="any"
                             min="0.001"
                             value={item.quantity}
+                            onFocus={(e) => e.target.select()}
                             onChange={(e) =>
                               updateCartItem(
                                 index,
                                 "quantity",
-                                parseFloat(e.target.value) || 0
+                                e.target.value
                               )
                             }
                             className="h-7 text-xs px-2"
@@ -537,11 +542,12 @@ export function POSRegister({ products, units, stockView }: POSRegisterProps) {
                             type="number"
                             step="0.01"
                             value={item.unitPrice}
+                            onFocus={(e) => e.target.select()}
                             onChange={(e) =>
                               updateCartItem(
                                 index,
                                 "unitPrice",
-                                parseFloat(e.target.value) || 0
+                                e.target.value
                               )
                             }
                             className="h-7 text-xs px-2 text-right"
@@ -717,11 +723,8 @@ export function POSRegister({ products, units, stockView }: POSRegisterProps) {
                           min="0"
                           max={cartTotal}
                           value={downPayment}
-                          onChange={(e) =>
-                            setDownPayment(
-                              Math.min(cartTotal, Math.max(0, parseFloat(e.target.value) || 0))
-                            )
-                          }
+                          onFocus={(e) => e.target.select()}
+                          onChange={(e) => setDownPayment(e.target.value)}
                           className="h-8 text-xs bg-background"
                         />
                       </div>
@@ -735,27 +738,30 @@ export function POSRegister({ products, units, stockView }: POSRegisterProps) {
                           type="date"
                           value={dueDate}
                           onChange={(e) => setDueDate(e.target.value)}
+                          min={new Date().toISOString().split("T")[0]}
                           className="h-8 text-xs bg-background"
+                          required
                         />
                       </div>
                     </div>
 
-                    {downPayment > 0 && (
-                      <div className="space-y-1">
-                        <Label className="text-[11px] font-medium">
+                    {(Number(downPayment) || 0) > 0 && (
+                      <div className="space-y-1.5">
+                        <Label className="text-[11px] font-medium text-muted-foreground">
                           {t("pos_down_payment_method")}
                         </Label>
-                        <div className="grid grid-cols-4 gap-1 text-[11px]">
+                        <div className="grid grid-cols-2 gap-2">
                           {(["cash", "telebirr", "cbe_birr", "bank_transfer"] as const).map((m) => (
                             <button
                               key={m}
                               type="button"
                               onClick={() => setDownPaymentMethod(m)}
-                              className={`p-1 rounded border text-center font-medium capitalize text-[10px] ${
+                              className={cn(
+                                "flex items-center gap-1.5 p-1.5 rounded border text-xs text-left transition-all",
                                 downPaymentMethod === m
-                                  ? "bg-amber-600 text-white border-amber-600 font-bold"
-                                  : "bg-background text-muted-foreground"
-                              }`}
+                                  ? "border-amber-600 bg-amber-500/10 font-medium text-amber-900 dark:text-amber-300"
+                                  : "border-border hover:bg-muted/40 text-muted-foreground"
+                              )}
                             >
                               {m === "bank_transfer"
                                 ? (language === "am" ? "ባንክ" : "Bank")
@@ -774,14 +780,14 @@ export function POSRegister({ products, units, stockView }: POSRegisterProps) {
                     <div className="p-2.5 rounded bg-background/80 border text-[11px] space-y-1">
                       <div className="flex justify-between text-muted-foreground">
                         <span>{t("credit_down_payment")}:</span>
-                        <span className="font-semibold text-foreground">{formatETB(downPayment)}</span>
+                        <span className="font-semibold text-foreground">{formatETB(Number(downPayment) || 0)}</span>
                       </div>
                       <div className="flex justify-between border-t pt-1 font-bold">
                         <span className="text-red-600 dark:text-red-400">
                           {t("credit_remaining_balance")}:
                         </span>
                         <span className="text-red-600 dark:text-red-400 text-sm">
-                          {formatETB(Math.max(0, cartTotal - downPayment))}
+                          {formatETB(Math.max(0, cartTotal - (Number(downPayment) || 0)))}
                         </span>
                       </div>
                     </div>

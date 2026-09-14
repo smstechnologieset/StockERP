@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { productSchema, type ProductFormValues } from "@/lib/validations/product";
@@ -16,7 +17,7 @@ import { Loader2, Calculator } from "lucide-react";
 import type { Unit, Product } from "@/types/database";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 
-import { STANDARD_UNITS } from "@/lib/constants/units";
+import { mergeWithStandardUnits } from "@/lib/constants/units";
 
 interface ProductFormModalProps {
   open: boolean;
@@ -33,18 +34,12 @@ export function ProductFormModal({
   productToEdit,
   onSuccess,
 }: ProductFormModalProps) {
-  const { t, language } = useLanguage();
+  const { t, tCategory, language } = useLanguage();
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const supabase = createClient();
 
-  // Merge DB units with STANDARD_UNITS ensuring no duplicate symbols
-  const availableUnits = [...units];
-  for (const std of STANDARD_UNITS) {
-    if (!availableUnits.some((u) => u.symbol.toLowerCase() === std.symbol.toLowerCase())) {
-      availableUnits.push(std);
-    }
-  }
+  const availableUnits = mergeWithStandardUnits(units);
 
   const defaultUnit = availableUnits.find((u) => u.symbol === "kg") || availableUnits[0];
   const initialDefaultUnitId = productToEdit?.default_unit_id || defaultUnit?.id || "";
@@ -189,40 +184,29 @@ export function ProductFormModal({
         )}
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="space-y-1.5">
-              <Label htmlFor="name">{t("prod_name_label")}</Label>
-              <Input
-                id="name"
-                placeholder={language === "am" ? "ምሳሌ፡ የምግብ ዘይት 5L ወይም ልዩ በርበሬ" : "e.g. Cooking Oil 5L or Berbere Special"}
-                {...register("name")}
-              />
-              {errors.name && (
-                <p className="text-[11px] text-red-600">{errors.name.message}</p>
-              )}
-            </div>
-
-            <div className="space-y-1.5">
-              <Label htmlFor="code">{t("prod_code_label")}</Label>
-              <Input
-                id="code"
-                placeholder={language === "am" ? "ምሳሌ፡ OIL-5L ወይም BER-001" : "e.g. OIL-5L or BER-001"}
-                {...register("code")}
-              />
-            </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="name">{t("prod_name_label")}</Label>
+            <Input
+              id="name"
+              placeholder={language === "am" ? "ምሳሌ፡ የምግብ ዘይት 5L ወይም ልዩ በርበሬ" : "e.g. Cooking Oil 5L or Berbere Special"}
+              {...register("name")}
+            />
+            {errors.name && (
+              <p className="text-[11px] text-red-600">{errors.name.message}</p>
+            )}
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
               <Label htmlFor="category">{t("prod_category_label")}</Label>
               <Select id="category" {...register("category")}>
-                <option value="Whole Grains">{t("cat_whole_grains")}</option>
-                <option value="Powders & Spices">{t("cat_powders_spices")}</option>
-                <option value="Edible Oils & Liquids">{t("cat_edible_oils")}</option>
-                <option value="Packaged Goods & Provisions">{t("cat_packaged_goods")}</option>
-                <option value="Pulses / Legumes">{t("cat_pulses_legumes")}</option>
-                <option value="Flour / Milling">{t("cat_flour_milling")}</option>
-                <option value="Other">{t("cat_other")}</option>
+                <option value="Whole Grains">{tCategory("Whole Grains")}</option>
+                <option value="Powders & Spices">{tCategory("Powders & Spices")}</option>
+                <option value="Edible Oils & Liquids">{tCategory("Edible Oils & Liquids")}</option>
+                <option value="Packaged Goods & Provisions">{tCategory("Packaged Goods & Provisions")}</option>
+                <option value="Pulses / Legumes">{tCategory("Pulses / Legumes")}</option>
+                <option value="Flour / Milling">{tCategory("Flour / Milling")}</option>
+                <option value="Other">{tCategory("Other")}</option>
               </Select>
             </div>
 
@@ -240,16 +224,29 @@ export function ProductFormModal({
 
           {/* Pricing & Reorder Thresholds */}
           <div className="p-3.5 bg-muted/40 rounded-lg border space-y-3">
-            <div className="flex items-center justify-between text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
               <div className="flex items-center gap-2">
-                <Calculator className="h-3.5 w-3.5 text-amber-600" />
-                <span>{t("prod_pricing_box_title")} ({currentUnit?.name || currentUnit?.symbol})</span>
-              </div>
-              {sellingPriceDisplay > 0 && (
-                <span className={`text-[11px] font-bold ${unitMargin >= 0 ? "text-emerald-700 dark:text-emerald-400" : "text-red-600"}`}>
-                  {t("pricing_gross_margin")}: {formatETB(unitMargin)} ({unitMarginPct.toFixed(1)}%)
+                <Calculator className="h-4 w-4 text-amber-600" />
+                <span className="font-semibold text-foreground uppercase tracking-wider text-[11px]">
+                  {t("prod_pricing_box_title")} ({currentUnit?.name || currentUnit?.symbol})
                 </span>
-              )}
+              </div>
+              <div className="flex items-center gap-2">
+                {sellingPriceDisplay > 0 && (
+                  <span className={`text-[11px] font-bold ${unitMargin >= 0 ? "text-emerald-700 dark:text-emerald-400" : "text-red-600"}`}>
+                    {t("pricing_gross_margin")}: {formatETB(unitMargin)} ({unitMarginPct.toFixed(1)}%)
+                  </span>
+                )}
+                {productToEdit && (
+                  <Link
+                    href={`/products/pricing?search=${encodeURIComponent(productToEdit.name)}`}
+                    className="text-[11px] text-amber-600 hover:underline font-semibold ml-1 inline-flex items-center gap-1"
+                    onClick={() => onOpenChange(false)}
+                  >
+                    {language === "am" ? "የዋጋ ማዕከል ክፈት →" : "Fast Price Manager →"}
+                  </Link>
+                )}
+              </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -261,6 +258,7 @@ export function ProductFormModal({
                   id="cost_price_display"
                   type="number"
                   step="0.01"
+                  onFocus={(e) => e.target.select()}
                   {...register("cost_price_display")}
                 />
               </div>
@@ -273,6 +271,7 @@ export function ProductFormModal({
                   id="selling_price_display"
                   type="number"
                   step="0.01"
+                  onFocus={(e) => e.target.select()}
                   {...register("selling_price_display")}
                 />
               </div>
@@ -285,6 +284,7 @@ export function ProductFormModal({
                   id="reorder_threshold_display"
                   type="number"
                   step="0.1"
+                  onFocus={(e) => e.target.select()}
                   {...register("reorder_threshold_display")}
                 />
               </div>

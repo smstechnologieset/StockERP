@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { ReceiveStockForm } from "./ReceiveStockForm";
 import type { Product, Unit, Supplier } from "@/types/database";
-import { STANDARD_UNITS } from "@/lib/constants/units";
+import { STANDARD_UNITS, mergeWithStandardUnits } from "@/lib/constants/units";
 
 export const revalidate = 0;
 
@@ -136,7 +136,7 @@ export default async function NewPurchasePage() {
   return (
     <ReceiveStockForm
       products={products}
-      units={units}
+      units={mergeWithStandardUnits(units)}
       suppliers={suppliers}
     />
   );

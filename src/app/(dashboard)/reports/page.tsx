@@ -332,7 +332,7 @@ export default async function ReportsPage() {
           ? s.sale_date.split("T")[0]
           : s.created_at
           ? s.created_at.split("T")[0]
-          : "2026-09-09";
+          : new Date().toISOString().split("T")[0];
 
         const items = (s.items || []).map((it: any) => {
           const qty = Number(it.quantity_base_units) || 0;
@@ -373,7 +373,7 @@ export default async function ReportsPage() {
           ? p.purchase_date.split("T")[0]
           : p.created_at
           ? p.created_at.split("T")[0]
-          : "2026-09-09";
+          : new Date().toISOString().split("T")[0];
 
         return {
           id: p.id,

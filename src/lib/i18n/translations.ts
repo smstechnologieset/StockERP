@@ -80,10 +80,7 @@ export const translations = {
     login_subtitle: "Shop Stock & Inventory Management",
     login_email: "Email Address",
     login_password: "Password",
-    login_quick_fill: "Quick-Fill Test Credentials",
-    login_fill_manager: "Fill Manager",
-    login_fill_staff: "Fill Staff",
-    login_footer: "Protected by Supabase Row Level Security & JWT Authentication",
+    login_footer: "Secure Stock & Inventory Management System",
 
     // Manager & Staff Dashboards
     dash_manager_title: "Owner & Manager Overview",
@@ -390,7 +387,6 @@ export const translations = {
     reports_selected_period: "Selected Period",
     reports_all_time: "All Time",
     reports_no_data_range: "No transactions recorded for this selected date range.",
-    reports_preset_june: "June 2 – 21 (Demo)",
     reports_preset_today: "Today",
     reports_preset_week: "Past 7 Days",
     reports_preset_month: "Past 30 Days",
@@ -457,7 +453,7 @@ export const translations = {
 
     // Unit Converter
     unit_calc_title: "Live Commodity Unit Converter",
-    unit_calc_desc: "Test how different trading units translate into base grams and retail measures.",
+    unit_calc_desc: "Calculate how different trading units translate into base grams and retail measures.",
     unit_calc_qty: "Quantity",
     unit_calc_select_unit: "Select Input Unit",
     unit_calc_base_grams: "Base Grams (g)",
@@ -547,10 +543,7 @@ export const translations = {
     login_subtitle: "የሱቅ ክምችትና ሽያጭ አስተዳደር",
     login_email: "የኢሜይል አድራሻ",
     login_password: "የይለፍ ቃል",
-    login_quick_fill: "የሙከራ መለያዎች",
-    login_fill_manager: "የስራ አስኪያጅ መለያ",
-    login_fill_staff: "የሰራተኛ መለያ",
-    login_footer: "በሱፓቤዝ (Supabase) የደህንነት ህግ የተጠበቀ",
+    login_footer: "ደህንነቱ የተጠበቀ የክምችትና የሽያጭ አስተዳደር ሥርዓት",
 
     // Manager & Staff Dashboards
     dash_manager_title: "የባለቤት እና ስራ አስኪያጅ ዳሽቦርድ",
@@ -857,7 +850,6 @@ export const translations = {
     reports_selected_period: "የተመረጠው ጊዜ",
     reports_all_time: "የሁሉም ጊዜ",
     reports_no_data_range: "በተመረጠው የጊዜ ገደብ ውስጥ የተመዘገበ ዝውውር የለም።",
-    reports_preset_june: "ሰኔ 2 – 21 (ሙከራ)",
     reports_preset_today: "ዛሬ",
     reports_preset_week: "ያለፉት 7 ቀናት",
     reports_preset_month: "ያለፉት 30 ቀናት",
@@ -924,7 +916,7 @@ export const translations = {
 
     // Unit Converter
     unit_calc_title: "የመለኪያዎች የቀጥታ ማስያዣ",
-    unit_calc_desc: "የተለያዩ መለኪያዎች ወደ ግራም እና ችርቻሮ እንዴት እንደሚለወጡ ይሞክሩ።",
+    unit_calc_desc: "የተለያዩ መለኪያዎች ወደ ግራም እና ችርቻሮ እንዴት እንደሚለወጡ ይመልከቱ።",
     unit_calc_qty: "ብዛት",
     unit_calc_select_unit: "የመነሻ መለኪያ ይምረጡ",
     unit_calc_base_grams: "የመነሻ ግራም (g)",

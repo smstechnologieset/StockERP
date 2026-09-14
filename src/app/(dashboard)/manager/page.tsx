@@ -29,7 +29,7 @@ export default async function ManagerDashboardPage() {
     // 2. Query sales for total sales calculation & recent sales activities
     const { data: salesResult } = await supabase
       .from("sales")
-      .select("id, invoice_number, customer_name, total_amount, payment_method, payment_status, sale_date, created_at")
+      .select("id, invoice_number, customer_name, total_amount, payment_method, sale_date, created_at")
       .order("created_at", { ascending: false });
 
     if (salesResult) {
@@ -51,7 +51,7 @@ export default async function ManagerDashboardPage() {
     const { data: movementsResult } = await supabase
       .from("stock_movements")
       .select("id, movement_type, quantity_base_units, notes, created_at, product:products(name, default_unit:units(symbol))")
-      .eq("movement_type", "adjustment")
+      .in("movement_type", ["adjustment_in", "adjustment_out"])
       .order("created_at", { ascending: false })
       .limit(10);
 

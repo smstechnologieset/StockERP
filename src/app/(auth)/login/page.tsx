@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Wheat, ShieldCheck, UserCheck, ArrowRight, AlertCircle, Loader2 } from "lucide-react";
+import { Wheat, ArrowRight, AlertCircle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -58,18 +58,6 @@ export default function LoginPage() {
     } finally {
       setLoading(false);
     }
-  }
-
-  // Quick fill helper for the test accounts
-  function fillCredentials(role: "manager" | "staff") {
-    if (role === "manager") {
-      setEmail("manager@stockerp.et");
-      setPassword("Password123!");
-    } else {
-      setEmail("staff@stockerp.et");
-      setPassword("Password123!");
-    }
-    setErrorMessage(null);
   }
 
   return (
@@ -150,46 +138,6 @@ export default function LoginPage() {
               )}
             </Button>
           </form>
-
-          {/* Quick Fill Test Accounts */}
-          <div className="mt-8 pt-6 border-t">
-            <div className="text-center mb-3">
-              <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                {t("login_quick_fill")}
-              </span>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => fillCredentials("manager")}
-                className="flex items-center gap-2 border-amber-600/30 hover:bg-amber-50 dark:hover:bg-amber-950/40 text-xs"
-              >
-                <ShieldCheck className="h-3.5 w-3.5 text-amber-600" />
-                <span>{t("login_fill_manager")}</span>
-              </Button>
-
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => fillCredentials("staff")}
-                className="flex items-center gap-2 border-blue-600/30 hover:bg-blue-50 dark:hover:bg-blue-950/40 text-xs"
-              >
-                <UserCheck className="h-3.5 w-3.5 text-blue-600" />
-                <span>{t("login_fill_staff")}</span>
-              </Button>
-            </div>
-            <div className="mt-3 p-2.5 rounded-lg bg-muted/40 text-[11px] text-muted-foreground space-y-1">
-              <div>
-                <strong>{t("owner_manager")}:</strong> <code className="text-foreground">manager@stockerp.et</code> / <code className="text-foreground">Password123!</code>
-              </div>
-              <div>
-                <strong>{t("staff")}:</strong> <code className="text-foreground">staff@stockerp.et</code> / <code className="text-foreground">Password123!</code>
-              </div>
-            </div>
-          </div>
         </CardContent>
 
         <CardFooter className="flex justify-center border-t py-4 text-xs text-muted-foreground bg-muted/20 rounded-b-xl">

@@ -3,11 +3,51 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { translations, type Language } from "./translations";
 
+export const CATEGORY_MAP: Record<string, { en: string; am: string }> = {
+  "Whole Grains": { en: "Whole Grains", am: "ጥራጥሬዎችና እህሎች" },
+  "Grains": { en: "Grains", am: "እህሎች" },
+  "Powders & Spices": { en: "Powders & Spices", am: "የተፈጩ ዱቄቶችና ቅመሞች" },
+  "Spices": { en: "Spices", am: "ቅመሞች" },
+  "Edible Oils & Liquids": { en: "Edible Oils & Liquids", am: "የምግብ ዘይትና ፈሳሾች" },
+  "Edible Oils": { en: "Edible Oils", am: "የምግብ ዘይትና ፈሳሾች" },
+  "Packaged Goods & Provisions": { en: "Packaged Goods & Provisions", am: "የታሸጉ ዕቃዎች" },
+  "Packaged Goods": { en: "Packaged Goods", am: "የታሸጉ ዕቃዎች" },
+  "Pulses / Legumes": { en: "Pulses / Legumes", am: "አተርና ባቄላ" },
+  "Pulses": { en: "Pulses", am: "አተርና ባቄላ" },
+  "Legumes": { en: "Legumes", am: "አተርና ባቄላ" },
+  "Flour / Milling": { en: "Flour / Milling", am: "የወፍጮ ውጤቶች" },
+  "Flour": { en: "Flour", am: "የወፍጮ ውጤቶች" },
+  "Other": { en: "Other", am: "ሌሎች" },
+};
+
+export function translateCategory(category: string, isAmharic: boolean): string {
+  if (!category) return "";
+  const trimmed = category.trim();
+  const matched = CATEGORY_MAP[trimmed];
+  if (matched) {
+    return isAmharic ? matched.am : matched.en;
+  }
+  // Check case-insensitive match
+  for (const [key, val] of Object.entries(CATEGORY_MAP)) {
+    if (key.toLowerCase() === trimmed.toLowerCase()) {
+      return isAmharic ? val.am : val.en;
+    }
+  }
+  // Check partial match
+  for (const [key, val] of Object.entries(CATEGORY_MAP)) {
+    if (trimmed.toLowerCase().includes(key.toLowerCase()) || key.toLowerCase().includes(trimmed.toLowerCase())) {
+      return isAmharic ? val.am : val.en;
+    }
+  }
+  return category;
+}
+
 interface LanguageContextType {
   language: Language;
   setLanguage: (lang: Language) => void;
   toggleLanguage: () => void;
   t: (key: string, fallback?: string) => string;
+  tCategory: (category: string) => string;
   isAmharic: boolean;
 }
 
@@ -47,6 +87,10 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     return enDict[key] || fallback || key;
   };
 
+  const tCategory = (category: string): string => {
+    return translateCategory(category, language === "am");
+  };
+
   return (
     <LanguageContext.Provider
       value={{
@@ -54,6 +98,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
         setLanguage,
         toggleLanguage,
         t,
+        tCategory,
         isAmharic: language === "am",
       }}
     >
@@ -71,6 +116,7 @@ export function useLanguage() {
       setLanguage: () => {},
       toggleLanguage: () => {},
       t: (key: string, fallback?: string) => fallback || key,
+      tCategory: (category: string) => category,
       isAmharic: false,
     };
   }

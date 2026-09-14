@@ -58,7 +58,7 @@ export function ProductsClient({
   isManager,
 }: ProductsClientProps) {
   const router = useRouter();
-  const { t, isAmharic, language } = useLanguage();
+  const { t, tCategory, isAmharic, language } = useLanguage();
   const [data, setData] = useState(initialProducts);
   const [globalFilter, setGlobalFilter] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
@@ -147,7 +147,7 @@ export function ProductsClient({
         header: t("prod_category_col"),
         cell: (info) => (
           <Badge variant="secondary" className="text-xs">
-            {info.getValue()}
+            {tCategory(info.getValue())}
           </Badge>
         ),
       }),
@@ -229,6 +229,17 @@ export function ProductsClient({
           const product = info.row.original;
           return (
             <div className="flex items-center gap-1">
+              <Link href={`/products/pricing?search=${encodeURIComponent(product.name)}`}>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 px-2 text-amber-700 dark:text-amber-400 hover:text-amber-800 hover:bg-amber-500/10 text-xs"
+                  title="Adjust price & margins in Price Management"
+                >
+                  <Tag className="h-3.5 w-3.5 mr-1" /> {language === "am" ? "ዋጋ" : "Price"}
+                </Button>
+              </Link>
+
               <Button
                 variant="ghost"
                 size="sm"
@@ -270,7 +281,7 @@ export function ProductsClient({
         },
       }),
     ],
-    [isManager, data, language, t, isAmharic]
+    [isManager, data, language, t, tCategory, isAmharic]
   );
 
   const table = useReactTable({
@@ -384,7 +395,7 @@ export function ProductsClient({
                 <option value="all">{t("cat_all")} ({data.length})</option>
                 {categories.map((c) => (
                   <option key={c} value={c}>
-                    {c}
+                    {tCategory(c)}
                   </option>
                 ))}
               </select>

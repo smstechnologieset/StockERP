@@ -23,12 +23,13 @@ import { createPurchaseAction } from "@/app/actions/purchases";
 import type { Product, Unit, Supplier } from "@/types/database";
 import Link from "next/link";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
+import { mergeWithStandardUnits } from "@/lib/constants/units";
 
 interface LineItemRow {
   productId: string;
   unitId: string;
-  quantity: number;
-  unitCost: number;
+  quantity: number | string;
+  unitCost: number | string;
 }
 
 interface ReceiveStockFormProps {
@@ -39,11 +40,12 @@ interface ReceiveStockFormProps {
 
 export function ReceiveStockForm({
   products,
-  units,
+  units: propUnits,
   suppliers,
 }: ReceiveStockFormProps) {
   const router = useRouter();
   const { t, isAmharic, language } = useLanguage();
+  const units = mergeWithStandardUnits(propUnits);
 
   const [supplierId, setSupplierId] = useState(suppliers[0]?.id || "");
   const [purchaseDate, setPurchaseDate] = useState(
@@ -51,6 +53,7 @@ export function ReceiveStockForm({
   );
   const [invoiceRef, setInvoiceRef] = useState("");
   const [notes, setNotes] = useState("");
+  const [updateCatalogCost, setUpdateCatalogCost] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
@@ -114,9 +117,9 @@ export function ReceiveStockForm({
   let totalQuantity = 0;
 
   items.forEach((item) => {
-    const lineTotal = (item.quantity || 0) * (item.unitCost || 0);
+    const lineTotal = (Number(item.quantity) || 0) * (Number(item.unitCost) || 0);
     totalCost += lineTotal;
-    totalQuantity += Number(item.quantity || 0);
+    totalQuantity += Number(item.quantity) || 0;
   });
 
   async function handleSubmit(e: React.FormEvent) {
@@ -146,13 +149,14 @@ export function ReceiveStockForm({
       purchase_date: purchaseDate,
       invoice_reference: invoiceRef || undefined,
       notes: notes || undefined,
+      update_catalog_cost: updateCatalogCost,
       items: items.map((item) => {
         const u = units.find((x) => x.id === item.unitId);
         return {
           product_id: item.productId,
           unit_id: item.unitId,
-          quantity: Number(item.quantity),
-          unit_cost: Number(item.unitCost),
+          quantity: Number(item.quantity) || 0,
+          unit_cost: Number(item.unitCost) || 0,
           conversion_factor: u?.conversion_factor || 1,
         };
       }),
@@ -305,7 +309,7 @@ export function ReceiveStockForm({
               <tbody className="divide-y">
                 {items.map((item, index) => {
                   const selectedProd = products.find((p) => p.id === item.productId);
-                  const lineTotal = (item.quantity || 0) * (item.unitCost || 0);
+                  const lineTotal = (Number(item.quantity) || 0) * (Number(item.unitCost) || 0);
 
                   return (
                     <tr key={index} className="hover:bg-muted/20 transition-colors">
@@ -348,8 +352,9 @@ export function ReceiveStockForm({
                           step="any"
                           min="0.001"
                           value={item.quantity}
+                          onFocus={(e) => e.target.select()}
                           onChange={(e) =>
-                            updateItem(index, "quantity", parseFloat(e.target.value) || 0)
+                            updateItem(index, "quantity", e.target.value)
                           }
                           className="h-9 text-xs"
                           required
@@ -363,8 +368,9 @@ export function ReceiveStockForm({
                           step="0.01"
                           min="0"
                           value={item.unitCost}
+                          onFocus={(e) => e.target.select()}
                           onChange={(e) =>
-                            updateItem(index, "unitCost", parseFloat(e.target.value) || 0)
+                            updateItem(index, "unitCost", e.target.value)
                           }
                           className="h-9 text-xs"
                           required
@@ -398,18 +404,42 @@ export function ReceiveStockForm({
 
           {/* Notes and Total Summary Footer */}
           <div className="p-6 border-t bg-muted/20 flex flex-col sm:flex-row justify-between items-start gap-6">
-            <div className="w-full sm:max-w-md space-y-1.5">
-              <Label htmlFor="notes">{t("purch_notes_label")}</Label>
-              <Input
-                id="notes"
-                placeholder={
-                  language === "am"
-                    ? "የእርጥበት ጥራት፣ የመኪና ታርጋ ቁጥር፣ የአሽከርካሪ ስም..."
-                    : "Moisture quality, transport truck plate number, driver name..."
-                }
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-              />
+            <div className="w-full sm:max-w-md space-y-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="notes">{t("purch_notes_label")}</Label>
+                <Input
+                  id="notes"
+                  placeholder={
+                    language === "am"
+                      ? "የእርጥበት ጥራት፣ የመኪና ታርጋ ቁጥር፣ የአሽከርካሪ ስም..."
+                      : "Moisture quality, transport truck plate number, driver name..."
+                  }
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                />
+              </div>
+
+              {/* Optional Catalog Default Cost Update Toggle */}
+              <label className="flex items-start gap-2.5 p-2.5 rounded-lg border bg-background hover:bg-muted/40 transition-colors cursor-pointer text-xs">
+                <input
+                  type="checkbox"
+                  checked={updateCatalogCost}
+                  onChange={(e) => setUpdateCatalogCost(e.target.checked)}
+                  className="mt-0.5 h-4 w-4 rounded border-border text-amber-600 focus:ring-amber-500 shrink-0"
+                />
+                <div>
+                  <span className="font-medium text-foreground block">
+                    {language === "am"
+                      ? "የእቃዎችን ነባሪ የመግዣ ዋጋ በነዚህ የደረሰኝ ዋጋዎች አዘምን"
+                      : "Update master catalog default cost price with these purchase prices"}
+                  </span>
+                  <span className="text-[11px] text-muted-foreground block mt-0.5">
+                    {language === "am"
+                      ? "ካልተመረጠ ይህ ግዢ ለደረሰኝና ለክምችት ታሪክ ብቻ ይመዘገባል፣ የሱቁ መደበኛ የዋጋ ዝርዝር አይቀየርም።"
+                      : "If unchecked, invoice prices are saved for this shipment without altering the shop's standard pricing policy."}
+                  </span>
+                </div>
+              </label>
             </div>
 
             <div className="w-full sm:w-80 rounded-xl border bg-card p-4 space-y-2 shadow-xs">

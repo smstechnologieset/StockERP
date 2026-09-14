@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { InventoryClient } from "./InventoryClient";
 import type { ProductCurrentStockView, Unit } from "@/types/database";
-import { STANDARD_UNITS } from "@/lib/constants/units";
+import { STANDARD_UNITS, mergeWithStandardUnits } from "@/lib/constants/units";
 
 export const revalidate = 0;
 
@@ -59,10 +59,10 @@ export default async function InventoryPage({
       is_active: true,
       branch_id: "00000000-0000-0000-0000-000000000001",
       branch_name: "Main Branch",
-      current_stock_base_units: 45000,
-      current_stock_default_unit: 45,
+      current_stock_base_units: 154000,
+      current_stock_default_unit: 154,
       is_low_stock: false,
-      current_valuation_etb: 29250.0,
+      current_valuation_etb: 100100,
     },
     {
       product_id: "p-2",
@@ -79,10 +79,10 @@ export default async function InventoryPage({
       is_active: true,
       branch_id: "00000000-0000-0000-0000-000000000001",
       branch_name: "Main Branch",
-      current_stock_base_units: 800000,
-      current_stock_default_unit: 8,
-      is_low_stock: false,
-      current_valuation_etb: 38400.0,
+      current_stock_base_units: 180000,
+      current_stock_default_unit: 1.8,
+      is_low_stock: true,
+      current_valuation_etb: 8640,
     },
     {
       product_id: "p-3",
@@ -99,10 +99,10 @@ export default async function InventoryPage({
       is_active: true,
       branch_id: "00000000-0000-0000-0000-000000000001",
       branch_name: "Main Branch",
-      current_stock_base_units: 8500,
-      current_stock_default_unit: 8.5,
-      is_low_stock: true,
-      current_valuation_etb: 1020.0,
+      current_stock_base_units: 42000,
+      current_stock_default_unit: 42,
+      is_low_stock: false,
+      current_valuation_etb: 5040,
     },
     {
       product_id: "p-4",
@@ -119,23 +119,17 @@ export default async function InventoryPage({
       is_active: true,
       branch_id: "00000000-0000-0000-0000-000000000001",
       branch_name: "Main Branch",
-      current_stock_base_units: 1200000,
-      current_stock_default_unit: 12,
-      is_low_stock: false,
-      current_valuation_etb: 50400.0,
+      current_stock_base_units: 120000,
+      current_stock_default_unit: 1.2,
+      is_low_stock: true,
+      current_valuation_etb: 5040,
     },
-  ];
-
-  const defaultUnits: Unit[] = units.length > 0 ? units : [
-    { id: "1", name: "Gram", symbol: "g", conversion_factor: 1, is_base_unit: true, created_at: "" },
-    { id: "2", name: "Kilogram", symbol: "kg", conversion_factor: 1000, is_base_unit: false, created_at: "" },
-    { id: "3", name: "Quintal (Kuntal)", symbol: "q", conversion_factor: 100000, is_base_unit: false, created_at: "" },
   ];
 
   return (
     <InventoryClient
       initialInventory={displayInventory}
-      units={defaultUnits}
+      units={mergeWithStandardUnits(units)}
       initialFilter={searchParams.filter}
     />
   );

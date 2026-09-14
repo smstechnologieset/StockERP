@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { POSRegister } from "./POSRegister";
 import type { Product, Unit, ProductCurrentStockView } from "@/types/database";
-import { STANDARD_UNITS } from "@/lib/constants/units";
+import { STANDARD_UNITS, mergeWithStandardUnits } from "@/lib/constants/units";
 
 export const revalidate = 0;
 
@@ -109,7 +109,7 @@ export default async function NewSalePage() {
   return (
     <POSRegister
       products={products}
-      units={units}
+      units={mergeWithStandardUnits(units)}
       stockView={stockView}
     />
   );

@@ -4,7 +4,11 @@ import type { Product, Unit } from "@/types/database";
 
 export const revalidate = 0;
 
-export default async function PricingManagementPage() {
+export default async function PricingManagementPage({
+  searchParams,
+}: {
+  searchParams?: { search?: string };
+}) {
   let products: (Product & { default_unit?: Unit })[] = [];
 
   try {
@@ -115,5 +119,10 @@ export default async function PricingManagementPage() {
     ];
   }
 
-  return <PricingClient initialProducts={products} />;
+  return (
+    <PricingClient
+      initialProducts={products}
+      initialSearch={searchParams?.search || ""}
+    />
+  );
 }

@@ -31,7 +31,7 @@ export async function getUsersAction(): Promise<{
       return {
         ...p,
         branch_name: "Main Store",
-        email: authInfo?.email || (p.role === "owner_manager" ? "manager@stockerp.et" : "staff@stockerp.et"),
+        email: authInfo?.email || "",
       };
     });
 
