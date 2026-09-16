@@ -31,6 +31,7 @@ import type { Product, Unit, ProductCurrentStockView } from "@/types/database";
 
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 import { mergeWithStandardUnits } from "@/lib/constants/units";
+import { EthiopianDatePicker } from "@/components/ui/EthiopianDatePicker";
 
 interface CartItem {
   productId: string;
@@ -45,9 +46,10 @@ interface POSRegisterProps {
   products: Product[];
   units: Unit[];
   stockView: ProductCurrentStockView[];
+  isManager?: boolean;
 }
 
-export function POSRegister({ products, units: propUnits, stockView }: POSRegisterProps) {
+export function POSRegister({ products, units: propUnits, stockView, isManager = false }: POSRegisterProps) {
   const router = useRouter();
   const { t, tCategory, isAmharic, language } = useLanguage();
   const units = mergeWithStandardUnits(propUnits);
@@ -278,63 +280,6 @@ export function POSRegister({ products, units: propUnits, stockView }: POSRegist
         </div>
       </div>
 
-      {/* Sale Complete Modal / Receipt Preview */}
-      {saleResult && (
-        <Card className="border-emerald-600/40 bg-emerald-50/20 dark:bg-emerald-950/20 p-6">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-600 text-white shadow-md shadow-emerald-600/20">
-                <CheckCircle2 className="h-6 w-6" />
-              </div>
-              <div>
-                <h3 className="font-heading font-bold text-lg text-emerald-950 dark:text-emerald-200">
-                  {saleResult.isCredit ? t("pos_credit_sale_recorded") : t("pos_sale_completed")} {t("pos_invoice_number")} #{saleResult.invoiceNumber}
-                </h3>
-                <p className="text-xs text-emerald-800 dark:text-emerald-300">
-                  {t("common_total")} ({t("currency_etb")}):{" "}
-                  <strong className="font-mono text-base">
-                    {formatETB(saleResult.totalAmount)}
-                  </strong>{" "}
-                  {saleResult.isCredit && (
-                    <span className="font-semibold text-amber-800 dark:text-amber-300">
-                      &bull; {t("credit_remaining_balance")}:{" "}
-                      <strong>{formatETB(saleResult.creditRemaining || 0)}</strong>
-                    </span>
-                  )}
-                  &bull; {t("mov_table_desc")}
-                </p>
-              </div>
-            </div>
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setSaleResult(null)}
-              >
-                {t("btn_new_order")}
-              </Button>
-              {saleResult.isCredit ? (
-                <Button
-                  size="sm"
-                  className="bg-amber-600 hover:bg-amber-700 text-white"
-                  onClick={() => router.push("/credit")}
-                >
-                  {t("btn_manage_credit")}
-                </Button>
-              ) : (
-                <Button
-                  size="sm"
-                  className="bg-amber-600 hover:bg-amber-700 text-white"
-                  onClick={() => router.push("/sales")}
-                >
-                  {t("btn_view_sales_log")}
-                </Button>
-              )}
-            </div>
-          </div>
-        </Card>
-      )}
-
       {/* Main Two-Column Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         {/* Left Column: Product Selection Grid (7 cols) */}
@@ -455,13 +400,6 @@ export function POSRegister({ products, units: propUnits, stockView }: POSRegist
             </CardHeader>
 
             <CardContent className="p-4 space-y-4">
-              {errorMessage && (
-                <div className="p-3 text-xs rounded-lg bg-red-500/10 border border-red-500/20 text-red-600 flex items-start gap-2">
-                  <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
-                  <span>{errorMessage}</span>
-                </div>
-              )}
-
               {/* Cart Line Items */}
               <div className="space-y-2.5 max-h-[280px] overflow-y-auto pr-1">
                 {cart.map((item, index) => {
@@ -733,14 +671,11 @@ export function POSRegister({ products, units: propUnits, stockView }: POSRegist
                         <Label htmlFor="dueDate" className="text-[11px] font-medium">
                           {t("credit_due_date")} *
                         </Label>
-                        <Input
+                        <EthiopianDatePicker
                           id="dueDate"
-                          type="date"
                           value={dueDate}
-                          onChange={(e) => setDueDate(e.target.value)}
-                          min={new Date().toISOString().split("T")[0]}
-                          className="h-8 text-xs bg-background"
-                          required
+                          onChange={setDueDate}
+                          className="w-full"
                         />
                       </div>
                     </div>
@@ -812,6 +747,71 @@ export function POSRegister({ products, units: propUnits, stockView }: POSRegist
                 )}
               </div>
 
+              {/* Bottom Status Notifications & Sale Confirmation */}
+              {errorMessage && (
+                <div className="p-3 text-xs rounded-lg bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400 flex items-start gap-2 animate-in fade-in slide-in-from-bottom-2">
+                  <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
+                  <span>{errorMessage}</span>
+                </div>
+              )}
+
+              {saleResult && (
+                <div className="p-4 rounded-xl border border-emerald-600/40 bg-emerald-500/10 dark:bg-emerald-950/40 space-y-3 shadow-sm animate-in fade-in slide-in-from-bottom-2">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-600 text-white shadow-md shadow-emerald-600/20">
+                      <CheckCircle2 className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <h3 className="font-heading font-bold text-sm text-emerald-950 dark:text-emerald-200">
+                        {saleResult.isCredit ? t("pos_credit_sale_recorded") : t("pos_sale_completed")} #{saleResult.invoiceNumber}
+                      </h3>
+                      <p className="text-xs text-emerald-800 dark:text-emerald-300 font-mono font-bold">
+                        {t("common_total")}: {formatETB(saleResult.totalAmount)}
+                      </p>
+                    </div>
+                  </div>
+
+                  {saleResult.isCredit && (
+                    <div className="text-[11px] p-2 rounded bg-background/80 border text-amber-800 dark:text-amber-300">
+                      {t("credit_remaining_balance")}: <strong>{formatETB(saleResult.creditRemaining || 0)}</strong>
+                    </div>
+                  )}
+
+                  <div className="flex gap-2 pt-1">
+                    <Button
+                      type="button"
+                      size="sm"
+                      className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs h-9"
+                      onClick={() => setSaleResult(null)}
+                    >
+                      <Plus className="mr-1.5 h-3.5 w-3.5" />
+                      {language === "am" ? "አዲስ ሽያጭ ጀምር" : "Start Next Sale"}
+                    </Button>
+                    {saleResult.isCredit && isManager ? (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="text-xs h-9"
+                        onClick={() => router.push("/credit")}
+                      >
+                        {t("btn_manage_credit")}
+                      </Button>
+                    ) : (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="text-xs h-9"
+                        onClick={() => router.push("/sales")}
+                      >
+                        {t("btn_view_sales_log")}
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              )}
+
               {/* Total Summary and Complete Button */}
               <div className="pt-3 border-t space-y-3">
                 <div className="flex justify-between items-baseline">
@@ -826,7 +826,7 @@ export function POSRegister({ products, units: propUnits, stockView }: POSRegist
                 <Button
                   type="button"
                   onClick={handleCheckout}
-                  disabled={loading || cart.length === 0}
+                  disabled={loading || cart.length === 0 || !!saleResult}
                   className="w-full bg-amber-600 hover:bg-amber-700 text-white h-11 text-base font-semibold shadow-md shadow-amber-600/20"
                 >
                   {loading ? (

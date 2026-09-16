@@ -47,7 +47,7 @@ interface CreditClientProps {
 
 export function CreditClient({ initialCredits, initialError }: CreditClientProps) {
   const router = useRouter();
-  const { t, isAmharic } = useLanguage();
+  const { t, formatEthDate, formatEthDateTime, isAmharic } = useLanguage();
 
   const [search, setSearch] = useState("");
   const [selectedStatus, setSelectedStatus] = useState<string>("all");
@@ -420,7 +420,7 @@ export function CreditClient({ initialCredits, initialError }: CreditClientProps
                           {c.sale?.invoice_number || "POS Sale"}
                         </span>
                         <div className="text-[10px] text-muted-foreground">
-                          {new Date(c.created_at).toLocaleDateString()}
+                          {formatEthDate(c.created_at)}
                         </div>
                       </td>
 
@@ -452,7 +452,7 @@ export function CreditClient({ initialCredits, initialError }: CreditClientProps
                         {c.due_date ? (
                           <div className="space-y-0.5">
                             <span className="text-[11px] font-medium text-foreground">
-                              {c.due_date}
+                              {formatEthDate(c.due_date)}
                             </span>
                             {isOverdue && (
                               <div>
@@ -758,7 +758,7 @@ export function CreditClient({ initialCredits, initialError }: CreditClientProps
                         )}
                       </div>
                       <div className="text-right text-[11px] text-muted-foreground">
-                        {new Date(p.payment_date || p.created_at).toLocaleString()}
+                        {formatEthDateTime(p.payment_date || p.created_at)}
                       </div>
                     </div>
                   ))

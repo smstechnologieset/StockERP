@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { translations, type Language } from "./translations";
+import { formatEthiopianDate, formatEthiopianDateTime, type FormatEthiopianDateOptions } from "../ethiopianDate";
 
 export const CATEGORY_MAP: Record<string, { en: string; am: string }> = {
   "Whole Grains": { en: "Whole Grains", am: "ጥራጥሬዎችና እህሎች" },
@@ -48,6 +49,8 @@ interface LanguageContextType {
   toggleLanguage: () => void;
   t: (key: string, fallback?: string) => string;
   tCategory: (category: string) => string;
+  formatEthDate: (input: string | Date | number | null | undefined, options?: FormatEthiopianDateOptions) => string;
+  formatEthDateTime: (input: string | Date | number | null | undefined) => string;
   isAmharic: boolean;
 }
 
@@ -91,6 +94,17 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     return translateCategory(category, language === "am");
   };
 
+  const formatEthDate = (
+    input: string | Date | number | null | undefined,
+    options: FormatEthiopianDateOptions = {}
+  ): string => {
+    return formatEthiopianDate(input, { ...options, isAmharic: language === "am" });
+  };
+
+  const formatEthDateTime = (input: string | Date | number | null | undefined): string => {
+    return formatEthiopianDateTime(input, { isAmharic: language === "am" });
+  };
+
   return (
     <LanguageContext.Provider
       value={{
@@ -99,6 +113,8 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
         toggleLanguage,
         t,
         tCategory,
+        formatEthDate,
+        formatEthDateTime,
         isAmharic: language === "am",
       }}
     >
@@ -117,6 +133,10 @@ export function useLanguage() {
       toggleLanguage: () => {},
       t: (key: string, fallback?: string) => fallback || key,
       tCategory: (category: string) => category,
+      formatEthDate: (input: string | Date | number | null | undefined, options: FormatEthiopianDateOptions = {}) =>
+        formatEthiopianDate(input, { ...options, isAmharic: false }),
+      formatEthDateTime: (input: string | Date | number | null | undefined) =>
+        formatEthiopianDateTime(input, { isAmharic: false }),
       isAmharic: false,
     };
   }

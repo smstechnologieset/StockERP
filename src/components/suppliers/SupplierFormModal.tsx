@@ -103,12 +103,6 @@ export function SupplierFormModal({
           </DialogDescription>
         </DialogHeader>
 
-        {errorMessage && (
-          <div className="mb-4 p-3 text-xs bg-red-500/10 border border-red-500/20 text-red-600 rounded-lg">
-            {errorMessage}
-          </div>
-        )}
-
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-1.5">
             <Label htmlFor="name">{t("sup_name_label")}</Label>
@@ -159,6 +153,12 @@ export function SupplierFormModal({
               {...register("notes")}
             />
           </div>
+
+          {errorMessage && (
+            <div className="p-3 text-xs bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400 rounded-lg animate-in fade-in slide-in-from-bottom-2">
+              {errorMessage}
+            </div>
+          )}
 
           <DialogFooter>
             <Button

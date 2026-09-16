@@ -1,5 +1,7 @@
+import { Suspense } from "react";
 import { Sidebar } from "@/components/navigation/Sidebar";
 import { Navbar } from "@/components/navigation/Navbar";
+import { NavigationProgress } from "@/components/ui/NavigationProgress";
 import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -51,6 +53,11 @@ export default async function DashboardLayout({
 
   return (
     <div className="flex min-h-screen bg-background text-foreground print:bg-white print:text-black">
+      {/* Navigation Progress bar on route changes */}
+      <Suspense fallback={null}>
+        <NavigationProgress />
+      </Suspense>
+
       {/* Sidebar navigation */}
       <div className="print:hidden">
         <Sidebar

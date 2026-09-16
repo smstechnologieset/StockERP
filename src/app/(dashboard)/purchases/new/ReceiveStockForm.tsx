@@ -13,6 +13,8 @@ import {
   DollarSign,
   Loader2,
   CheckCircle2,
+  Truck,
+  Users,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,6 +26,7 @@ import type { Product, Unit, Supplier } from "@/types/database";
 import Link from "next/link";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 import { mergeWithStandardUnits } from "@/lib/constants/units";
+import { EthiopianDatePicker } from "@/components/ui/EthiopianDatePicker";
 
 interface LineItemRow {
   productId: string;
@@ -53,6 +56,8 @@ export function ReceiveStockForm({
   );
   const [invoiceRef, setInvoiceRef] = useState("");
   const [notes, setNotes] = useState("");
+  const [transportCost, setTransportCost] = useState<string | number>("");
+  const [laborCost, setLaborCost] = useState<string | number>("");
   const [updateCatalogCost, setUpdateCatalogCost] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -113,14 +118,18 @@ export function ReceiveStockForm({
   }
 
   // Live Totals calculation
-  let totalCost = 0;
+  let itemsSubtotal = 0;
   let totalQuantity = 0;
 
   items.forEach((item) => {
     const lineTotal = (Number(item.quantity) || 0) * (Number(item.unitCost) || 0);
-    totalCost += lineTotal;
+    itemsSubtotal += lineTotal;
     totalQuantity += Number(item.quantity) || 0;
   });
+
+  const numTransport = Number(transportCost) || 0;
+  const numLabor = Number(laborCost) || 0;
+  const grandTotalCost = itemsSubtotal + numTransport + numLabor;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -150,6 +159,8 @@ export function ReceiveStockForm({
       invoice_reference: invoiceRef || undefined,
       notes: notes || undefined,
       update_catalog_cost: updateCatalogCost,
+      transport_cost: numTransport > 0 ? numTransport : undefined,
+      labor_cost: numLabor > 0 ? numLabor : undefined,
       items: items.map((item) => {
         const u = units.find((x) => x.id === item.unitId);
         return {
@@ -199,21 +210,6 @@ export function ReceiveStockForm({
         </Link>
       </div>
 
-      {errorMessage && (
-        <div className="p-4 rounded-lg bg-red-500/10 border border-red-500/20 text-red-700 text-sm">
-          {errorMessage}
-        </div>
-      )}
-
-      {success && (
-        <div className="p-4 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-800 text-sm flex items-center gap-2">
-          <CheckCircle2 className="h-5 w-5 text-emerald-600" />
-          <span>
-            {t("purch_stock_success_title")} {t("purch_stock_success_desc")}
-          </span>
-        </div>
-      )}
-
       {/* Shipment Details Header Card */}
       <Card className="shadow-sm border">
         <CardHeader className="pb-4 border-b">
@@ -252,12 +248,11 @@ export function ReceiveStockForm({
 
             <div className="space-y-1.5">
               <Label htmlFor="purchaseDate">{t("purch_date_label")}</Label>
-              <Input
+              <EthiopianDatePicker
                 id="purchaseDate"
-                type="date"
                 value={purchaseDate}
-                onChange={(e) => setPurchaseDate(e.target.value)}
-                required
+                onChange={setPurchaseDate}
+                className="w-full"
               />
             </div>
 
@@ -402,6 +397,73 @@ export function ReceiveStockForm({
             </table>
           </div>
 
+          {/* Optional Logistics & Offloading Expenses */}
+          <div className="p-5 border-t bg-muted/10 space-y-3">
+            <div className="flex items-center gap-2">
+              <Truck className="h-4 w-4 text-amber-600" />
+              <h3 className="text-sm font-semibold text-foreground">
+                {t("purch_additional_expenses")}
+              </h3>
+              <span className="text-[11px] px-2 py-0.5 rounded-full bg-muted text-muted-foreground font-medium">
+                {language === "am" ? "አማራጭ" : "Optional"}
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Transport Freight Cost */}
+              <div className="space-y-1.5">
+                <Label htmlFor="transportCost" className="text-xs flex items-center gap-1.5 font-medium">
+                  <Truck className="h-3.5 w-3.5 text-muted-foreground" />
+                  <span>{t("purch_transport_cost_label")}</span>
+                </Label>
+                <div className="relative">
+                  <Input
+                    id="transportCost"
+                    type="number"
+                    min="0"
+                    step="any"
+                    placeholder="0.00"
+                    value={transportCost}
+                    onChange={(e) => setTransportCost(e.target.value)}
+                    className="pr-12 text-sm font-mono"
+                  />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground font-medium">
+                    ETB
+                  </span>
+                </div>
+                <p className="text-[11px] text-muted-foreground">
+                  {t("purch_transport_cost_desc")}
+                </p>
+              </div>
+
+              {/* Offloading Labor Fee */}
+              <div className="space-y-1.5">
+                <Label htmlFor="laborCost" className="text-xs flex items-center gap-1.5 font-medium">
+                  <Users className="h-3.5 w-3.5 text-muted-foreground" />
+                  <span>{t("purch_labor_cost_label")}</span>
+                </Label>
+                <div className="relative">
+                  <Input
+                    id="laborCost"
+                    type="number"
+                    min="0"
+                    step="any"
+                    placeholder="0.00"
+                    value={laborCost}
+                    onChange={(e) => setLaborCost(e.target.value)}
+                    className="pr-12 text-sm font-mono"
+                  />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground font-medium">
+                    ETB
+                  </span>
+                </div>
+                <p className="text-[11px] text-muted-foreground">
+                  {t("purch_labor_cost_desc")}
+                </p>
+              </div>
+            </div>
+          </div>
+
           {/* Notes and Total Summary Footer */}
           <div className="p-6 border-t bg-muted/20 flex flex-col sm:flex-row justify-between items-start gap-6">
             <div className="w-full sm:max-w-md space-y-3">
@@ -442,7 +504,7 @@ export function ReceiveStockForm({
               </label>
             </div>
 
-            <div className="w-full sm:w-80 rounded-xl border bg-card p-4 space-y-2 shadow-xs">
+            <div className="w-full sm:w-88 rounded-xl border bg-card p-4 space-y-2.5 shadow-xs">
               <div className="flex justify-between text-xs text-muted-foreground">
                 <span>{t("purch_items_count")}:</span>
                 <span className="font-semibold text-foreground">
@@ -455,14 +517,56 @@ export function ReceiveStockForm({
                   {totalQuantity} {language === "am" ? "አሃዶች" : "Units"}
                 </span>
               </div>
-              <div className="border-t pt-2 flex justify-between items-center text-sm font-bold">
+
+              <div className="border-t pt-2 space-y-1.5 text-xs">
+                <div className="flex justify-between text-muted-foreground">
+                  <span>{t("purch_items_subtotal")}:</span>
+                  <span className="font-mono font-medium text-foreground">{formatETB(itemsSubtotal)}</span>
+                </div>
+                {numTransport > 0 && (
+                  <div className="flex justify-between text-amber-700 dark:text-amber-400">
+                    <span className="flex items-center gap-1">
+                      <Truck className="h-3 w-3" />
+                      <span>{language === "am" ? "ትራንስፖርት" : "Transport"}:</span>
+                    </span>
+                    <span className="font-mono font-semibold">+ {formatETB(numTransport)}</span>
+                  </div>
+                )}
+                {numLabor > 0 && (
+                  <div className="flex justify-between text-blue-700 dark:text-blue-400">
+                    <span className="flex items-center gap-1">
+                      <Users className="h-3 w-3" />
+                      <span>{language === "am" ? "የማውረጃ ጉልበት (ኩሊ)" : "Offloading Labor"}:</span>
+                    </span>
+                    <span className="font-mono font-semibold">+ {formatETB(numLabor)}</span>
+                  </div>
+                )}
+              </div>
+
+              <div className="border-t pt-2.5 flex justify-between items-center text-sm font-bold">
                 <span className="text-foreground">{t("purch_total_shipment_cost")}:</span>
-                <span className="text-lg text-amber-600">{formatETB(totalCost)}</span>
+                <span className="text-xl text-amber-600 font-mono">{formatETB(grandTotalCost)}</span>
               </div>
             </div>
           </div>
         </CardContent>
       </Card>
+
+      {/* Bottom Status & Notifications (Instantly visible above action buttons) */}
+      {errorMessage && (
+        <div className="p-4 rounded-lg bg-red-500/10 border border-red-500/20 text-red-700 dark:text-red-400 text-sm flex items-center gap-2 animate-in fade-in slide-in-from-bottom-2">
+          <span>{errorMessage}</span>
+        </div>
+      )}
+
+      {success && (
+        <div className="p-4 rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-emerald-800 dark:text-emerald-300 text-sm flex items-center gap-2.5 shadow-sm animate-in fade-in slide-in-from-bottom-2">
+          <CheckCircle2 className="h-5 w-5 text-emerald-600 shrink-0" />
+          <div className="flex-1 font-medium">
+            {t("purch_stock_success_title")} {t("purch_stock_success_desc")}
+          </div>
+        </div>
+      )}
 
       {/* Action Buttons */}
       <div className="flex justify-end gap-3">
@@ -470,16 +574,20 @@ export function ReceiveStockForm({
           type="button"
           variant="outline"
           onClick={() => router.back()}
-          disabled={loading}
+          disabled={loading || success}
         >
           {t("btn_cancel")}
         </Button>
         <Button
           type="submit"
-          disabled={loading}
-          className="bg-amber-600 hover:bg-amber-700 text-white min-w-[160px]"
+          disabled={loading || success}
+          className="bg-amber-600 hover:bg-amber-700 text-white min-w-[170px]"
         >
-          {loading ? (
+          {success ? (
+            <>
+              <CheckCircle2 className="mr-2 h-4 w-4 text-white" /> {language === "am" ? "ተመዝግቧል!" : "Recorded!"}
+            </>
+          ) : loading ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" /> {t("btn_processing")}
             </>

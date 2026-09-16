@@ -24,7 +24,7 @@ interface SalesClientProps {
 }
 
 export function SalesClient({ sales, totalSalesRevenue }: SalesClientProps) {
-  const { t, isAmharic } = useLanguage();
+  const { t, formatEthDate, isAmharic } = useLanguage();
 
   function getPaymentBadge(method: string) {
     switch (method) {
@@ -149,7 +149,7 @@ export function SalesClient({ sales, totalSalesRevenue }: SalesClientProps) {
                     <td className="px-6 py-4 text-xs text-muted-foreground">
                       <div className="flex items-center gap-1">
                         <Calendar className="h-3 w-3" />
-                        {new Date(sale.sale_date || sale.created_at).toLocaleDateString()}
+                        <span>{formatEthDate(sale.sale_date || sale.created_at)}</span>
                       </div>
                     </td>
                     <td className="px-6 py-4 text-xs">

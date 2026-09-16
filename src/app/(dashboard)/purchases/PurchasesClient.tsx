@@ -12,7 +12,7 @@ interface PurchasesClientProps {
 }
 
 export function PurchasesClient({ purchases }: PurchasesClientProps) {
-  const { t } = useLanguage();
+  const { t, formatEthDate, language } = useLanguage();
 
   return (
     <div className="space-y-6">
@@ -55,42 +55,63 @@ export function PurchasesClient({ purchases }: PurchasesClientProps) {
                 </tr>
               </thead>
               <tbody className="divide-y">
-                {purchases.map((purchase) => (
-                  <tr key={purchase.id} className="hover:bg-muted/30 transition-colors">
-                    <td className="px-6 py-4 text-xs text-muted-foreground">
-                      <div className="flex items-center gap-1.5">
-                        <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
-                        {new Date(purchase.purchase_date || purchase.created_at).toLocaleDateString()}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="font-mono text-xs font-semibold text-foreground flex items-center gap-1.5">
-                        <Receipt className="h-3.5 w-3.5 text-amber-600" />
-                        {purchase.invoice_reference || "N/A"}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 text-xs font-medium text-foreground">
-                      <div className="flex items-center gap-1.5">
-                        <Building2 className="h-3.5 w-3.5 text-muted-foreground" />
-                        {purchase.supplier?.name || (t("common_status") === "ሁኔታ" ? "ያልታወቀ አቅራቢ" : "Unknown Supplier")}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 text-xs text-muted-foreground max-w-xs truncate">
-                      {purchase.items?.length > 0 ? (
-                        <span>
-                          {purchase.items
-                            .map((i: any) => `${i.product?.name || "Item"} (${i.quantity}${i.unit?.symbol || ""})`)
-                            .join(", ")}
-                        </span>
-                      ) : (
-                        <span>{purchase.notes || t("common_items_count")}</span>
-                      )}
-                    </td>
-                    <td className="px-6 py-4 text-right font-bold text-foreground font-mono">
-                      {formatETB(purchase.total_cost)}
-                    </td>
-                  </tr>
-                ))}
+                {purchases.map((purchase) => {
+                  const transport = Number(purchase.transport_cost) || 0;
+                  const labor = Number(purchase.labor_cost) || 0;
+
+                  return (
+                    <tr key={purchase.id} className="hover:bg-muted/30 transition-colors">
+                      <td className="px-6 py-4 text-xs text-muted-foreground">
+                        <div className="flex items-center gap-1.5">
+                          <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
+                          <span>{formatEthDate(purchase.purchase_date || purchase.created_at)}</span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="font-mono text-xs font-semibold text-foreground flex items-center gap-1.5">
+                          <Receipt className="h-3.5 w-3.5 text-amber-600" />
+                          {purchase.invoice_reference || "N/A"}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 text-xs font-medium text-foreground">
+                        <div className="flex items-center gap-1.5">
+                          <Building2 className="h-3.5 w-3.5 text-muted-foreground" />
+                          {purchase.supplier?.name || (t("common_status") === "ሁኔታ" ? "ያልታወቀ አቅራቢ" : "Unknown Supplier")}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 text-xs text-muted-foreground max-w-xs truncate">
+                        {purchase.items?.length > 0 ? (
+                          <span>
+                            {purchase.items
+                              .map((i: any) => `${i.product?.name || "Item"} (${i.quantity}${i.unit?.symbol || ""})`)
+                              .join(", ")}
+                          </span>
+                        ) : (
+                          <span>{purchase.notes || t("common_items_count")}</span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <div className="font-bold text-foreground font-mono text-sm">
+                          {formatETB(purchase.total_cost)}
+                        </div>
+                        {(transport > 0 || labor > 0) && (
+                          <div className="flex flex-col items-end gap-0.5 mt-1 text-[11px] font-mono">
+                            {transport > 0 && (
+                              <span className="text-amber-600 dark:text-amber-400">
+                                🚚 +{formatETB(transport)} {language === "am" ? "ትራንስፖርት" : "Freight"}
+                              </span>
+                            )}
+                            {labor > 0 && (
+                              <span className="text-blue-600 dark:text-blue-400">
+                                👷 +{formatETB(labor)} {language === "am" ? "ጉልበት/ኩሊ" : "Labor"}
+                              </span>
+                            )}
+                          </div>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>

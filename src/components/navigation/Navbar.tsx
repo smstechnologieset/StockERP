@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Plus, ShoppingCart, PackagePlus, AlertTriangle } from "lucide-react";
+import { Plus, ShoppingCart, PackagePlus, AlertTriangle, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 import { LanguageSwitcher } from "./LanguageSwitcher";
@@ -13,7 +13,7 @@ interface NavbarProps {
 }
 
 export function Navbar({ userRole = "staff", lowStockCount = 0 }: NavbarProps) {
-  const { t } = useLanguage();
+  const { t, formatEthDate } = useLanguage();
 
   return (
     <header className="sticky top-0 z-20 flex h-16 w-full items-center justify-between border-b bg-background/95 px-6 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -24,6 +24,12 @@ export function Navbar({ userRole = "staff", lowStockCount = 0 }: NavbarProps) {
       </div>
 
       <div className="flex items-center gap-3">
+        {/* Live Ethiopian Calendar Date Badge */}
+        <div className="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-md bg-amber-500/10 border border-amber-500/20 text-xs font-semibold text-amber-900 dark:text-amber-200">
+          <Calendar className="h-3.5 w-3.5 text-amber-600" />
+          <span>{formatEthDate(new Date())}</span>
+        </div>
+
         {/* Bilingual Language Switcher */}
         <LanguageSwitcher />
 

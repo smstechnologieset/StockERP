@@ -18,6 +18,8 @@ export interface CreatePurchaseInput {
   invoice_reference?: string;
   notes?: string;
   update_catalog_cost?: boolean;
+  transport_cost?: number;
+  labor_cost?: number;
   items: PurchaseItemInput[];
 }
 
@@ -31,11 +33,11 @@ export async function createPurchaseAction(input: CreatePurchaseInput) {
     const branchId = input.branch_id || "00000000-0000-0000-0000-000000000001";
     const recordedBy = user?.id || null;
 
-    // Calculate total cost
-    let totalCost = 0;
+    // Calculate commodity items subtotal
+    let itemsSubtotal = 0;
     const preparedItems = input.items.map((item) => {
       const lineTotal = Number((item.quantity * item.unit_cost).toFixed(2));
-      totalCost += lineTotal;
+      itemsSubtotal += lineTotal;
 
       const quantityBaseUnits = Number((item.quantity * item.conversion_factor).toFixed(3));
       const costPerBaseUnit = quantityBaseUnits > 0 ? Number((lineTotal / quantityBaseUnits).toFixed(4)) : 0;
@@ -51,23 +53,64 @@ export async function createPurchaseAction(input: CreatePurchaseInput) {
       };
     });
 
+    const transportCost = Number(input.transport_cost) || 0;
+    const laborCost = Number(input.labor_cost) || 0;
+    const grandTotalCost = Number((itemsSubtotal + transportCost + laborCost).toFixed(2));
+
+    // Append logistics breakdown to notes for full ledger traceability
+    let notesText = input.notes || null;
+    if (transportCost > 0 || laborCost > 0) {
+      const breakdownParts: string[] = [];
+      if (transportCost > 0) breakdownParts.push(`ትራንስፖርት/Transport: ${transportCost.toLocaleString()} ETB`);
+      if (laborCost > 0) breakdownParts.push(`የማውረጃ ጉልበት/Labor: ${laborCost.toLocaleString()} ETB`);
+      const breakdownStr = `[${breakdownParts.join(" | ")}]`;
+      notesText = notesText ? `${notesText} ${breakdownStr}` : breakdownStr;
+    }
+
     // 1. Insert header purchase record
-    const { data: purchase, error: purchaseError } = await supabase
+    let purchase: any;
+    const { data: pData, error: purchaseError } = await supabase
       .from("purchases")
       .insert({
         branch_id: branchId,
         supplier_id: input.supplier_id,
         purchase_date: input.purchase_date,
         invoice_reference: input.invoice_reference || null,
-        total_cost: totalCost,
-        notes: input.notes || null,
+        transport_cost: transportCost,
+        labor_cost: laborCost,
+        total_cost: grandTotalCost,
+        notes: notesText,
         recorded_by: recordedBy,
       })
       .select()
       .single();
 
     if (purchaseError) {
-      throw new Error(`Failed to create purchase: ${purchaseError.message}`);
+      // Graceful fallback if database schema migration hasn't been applied yet in remote DB
+      if (purchaseError.message.includes("transport_cost") || purchaseError.message.includes("labor_cost")) {
+        const { data: fallbackData, error: fallbackError } = await supabase
+          .from("purchases")
+          .insert({
+            branch_id: branchId,
+            supplier_id: input.supplier_id,
+            purchase_date: input.purchase_date,
+            invoice_reference: input.invoice_reference || null,
+            total_cost: grandTotalCost,
+            notes: notesText,
+            recorded_by: recordedBy,
+          })
+          .select()
+          .single();
+
+        if (fallbackError) {
+          throw new Error(`Failed to create purchase: ${fallbackError.message}`);
+        }
+        purchase = fallbackData;
+      } else {
+        throw new Error(`Failed to create purchase: ${purchaseError.message}`);
+      }
+    } else {
+      purchase = pData;
     }
 
     // 2. Insert line items

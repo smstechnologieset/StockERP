@@ -10,18 +10,30 @@ export default async function NewSalePage() {
   let units: Unit[] = [];
   let stockView: ProductCurrentStockView[] = [];
 
+  let isManager = false;
+
   try {
     const supabase = createClient();
 
-    const [prodRes, unitsRes, stockRes] = await Promise.all([
+    const [prodRes, unitsRes, stockRes, userRes] = await Promise.all([
       supabase.from("products").select("*").eq("is_active", true).order("name"),
       supabase.from("units").select("*").order("conversion_factor"),
       supabase.from("view_product_current_stock").select("*"),
+      supabase.auth.getUser(),
     ]);
 
     if (prodRes.data) products = prodRes.data;
     if (unitsRes.data) units = unitsRes.data;
     if (stockRes.data) stockView = stockRes.data;
+
+    if (userRes.data?.user) {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", userRes.data.user.id)
+        .single();
+      isManager = profile?.role === "owner_manager";
+    }
   } catch (error) {
     console.error("Error fetching POS data:", error);
   }
@@ -111,6 +123,7 @@ export default async function NewSalePage() {
       products={products}
       units={mergeWithStandardUnits(units)}
       stockView={stockView}
+      isManager={isManager}
     />
   );
 }

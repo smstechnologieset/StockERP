@@ -280,6 +280,8 @@ export default async function ReportsPage() {
   let allPurchases: ReportPurchase[] = [...HISTORICAL_PURCHASES];
   let categoryValuation: { name: string; value: number; color: string }[] = [];
   let lowStockItems: any[] = [];
+  let allStockItems: any[] = [];
+  let allCredits: any[] = [];
   let creditOutstanding = 38900.0;
   let creditCollected = 14800.0;
 
@@ -290,11 +292,12 @@ export default async function ReportsPage() {
       supabase.from("view_product_current_stock").select("*"),
       supabase.from("sales").select("*, items:sale_items(*, product:products(name))"),
       supabase.from("purchases").select("*, supplier:suppliers(name)"),
-      supabase.from("customer_credits").select("remaining_balance, paid_amount"),
+      supabase.from("customer_credits").select("*, sale:sales(invoice_number)"),
     ]);
 
-    // Customer Credit Balances
+    // Customer Credit Accounts
     if (creditsRes.data && creditsRes.data.length > 0) {
+      allCredits = creditsRes.data;
       creditOutstanding = creditsRes.data.reduce(
         (sum, c) => sum + (Number(c.remaining_balance) || 0),
         0
@@ -307,6 +310,7 @@ export default async function ReportsPage() {
 
     // Process Stock Valuation by Category
     if (stockRes.data && stockRes.data.length > 0) {
+      allStockItems = stockRes.data;
       const catMap = new Map<string, number>();
       stockRes.data.forEach((item) => {
         const cat = item.product_category || "Other";
@@ -380,6 +384,8 @@ export default async function ReportsPage() {
           purchase_date: dateStr,
           supplier_name: p.supplier?.name || "Direct / Local Farmer",
           total_cost: Number(p.total_cost) || 0,
+          transport_cost: Number(p.transport_cost) || 0,
+          labor_cost: Number(p.labor_cost) || 0,
           invoice_reference: p.invoice_reference || undefined,
         };
       });
@@ -394,11 +400,115 @@ export default async function ReportsPage() {
     console.error("Reports page data processing error:", error);
   }
 
+  if (allStockItems.length === 0) {
+    allStockItems = [
+      {
+        product_name: "Sinde (Wheat Grain)",
+        product_category: "Whole Grains",
+        current_stock_base_units: 1800000,
+        current_stock_default_unit: 18,
+        default_unit_symbol: "q",
+        default_unit_factor: 100000,
+        base_cost_price: 5200,
+        base_selling_price: 6500,
+        current_valuation_etb: 93600,
+        is_low_stock: false,
+      },
+      {
+        product_name: "Barley (Gebs)",
+        product_category: "Whole Grains",
+        current_stock_base_units: 1200000,
+        current_stock_default_unit: 12,
+        default_unit_symbol: "q",
+        default_unit_factor: 100000,
+        base_cost_price: 5800,
+        base_selling_price: 7200,
+        current_valuation_etb: 69600,
+        is_low_stock: false,
+      },
+      {
+        product_name: "Berbere Special Grade 1",
+        product_category: "Powders & Spices",
+        current_stock_base_units: 45500,
+        current_stock_default_unit: 45.5,
+        default_unit_symbol: "kg",
+        default_unit_factor: 1000,
+        base_cost_price: 700,
+        base_selling_price: 900,
+        current_valuation_etb: 31850,
+        is_low_stock: false,
+      },
+      {
+        product_name: "Ater (Split Yellow Peas)",
+        product_category: "Pulses / Legumes",
+        current_stock_base_units: 200000,
+        current_stock_default_unit: 2,
+        default_unit_symbol: "q",
+        default_unit_factor: 100000,
+        base_cost_price: 15900,
+        base_selling_price: 19500,
+        current_valuation_etb: 31800,
+        is_low_stock: false,
+      },
+      {
+        product_name: "Bakela (Faba Beans)",
+        product_category: "Pulses / Legumes",
+        current_stock_base_units: 150000,
+        current_stock_default_unit: 1.5,
+        default_unit_symbol: "q",
+        default_unit_factor: 100000,
+        base_cost_price: 4500,
+        base_selling_price: 5800,
+        current_valuation_etb: 6750,
+        is_low_stock: false,
+      },
+    ];
+  }
+
+  const defaultCredits = [
+    {
+      id: "cred-01",
+      customer_name: "Almaz Teff Traders",
+      customer_phone: "0911-234567",
+      sale: { invoice_number: "INV-60703" },
+      total_credit_amount: 21900,
+      paid_amount: 14800,
+      remaining_balance: 7100,
+      created_at: "2026-06-07",
+      due_date: "2026-10-15",
+      status: "partially_paid",
+    },
+    {
+      id: "cred-02",
+      customer_name: "Tirunesh Spice Market",
+      customer_phone: "0920-443322",
+      sale: { invoice_number: "INV-90703" },
+      total_credit_amount: 36400,
+      paid_amount: 0,
+      remaining_balance: 36400,
+      created_at: "2026-09-07",
+      due_date: "2026-10-25",
+      status: "unpaid",
+    },
+    {
+      id: "cred-03",
+      customer_name: "Kebede Grain Wholesalers",
+      customer_phone: "0912-887766",
+      sale: { invoice_number: "INV-61506" },
+      total_credit_amount: 29000,
+      paid_amount: 29000,
+      remaining_balance: 0,
+      created_at: "2026-06-15",
+      due_date: "2026-08-30",
+      status: "paid",
+    },
+  ];
+
   if (categoryValuation.length === 0) {
     categoryValuation = [
       { name: "Whole Grains", value: 163200, color: "#d97706" },
       { name: "Powders & Spices", value: 31850, color: "#dc2626" },
-      { name: "Pulses / Legumes", value: 31800, color: "#059669" },
+      { name: "Pulses / Legumes", value: 38550, color: "#059669" },
     ];
   }
 
@@ -410,6 +520,8 @@ export default async function ReportsPage() {
       lowStockItems={lowStockItems}
       creditOutstanding={creditOutstanding}
       creditCollected={creditCollected}
+      allStockItems={allStockItems}
+      allCredits={allCredits.length > 0 ? allCredits : defaultCredits}
     />
   );
 }

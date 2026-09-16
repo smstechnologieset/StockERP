@@ -38,7 +38,7 @@ interface UsersClientProps {
 
 export function UsersClient({ initialUsers }: UsersClientProps) {
   const router = useRouter();
-  const { t, isAmharic } = useLanguage();
+  const { t, formatEthDate, isAmharic } = useLanguage();
   const [users, setUsers] = useState(initialUsers);
   const [search, setSearch] = useState("");
   const [updatingId, setUpdatingId] = useState<string | null>(null);
@@ -265,8 +265,8 @@ export function UsersClient({ initialUsers }: UsersClientProps) {
                         </Badge>
                       </td>
 
-                      <td className="px-5 py-3.5 text-center font-mono text-muted-foreground">
-                        {new Date(u.created_at).toLocaleDateString()}
+                      <td className="px-5 py-3.5 text-center text-xs text-muted-foreground">
+                        {formatEthDate(u.created_at)}
                       </td>
 
                       <td className="px-5 py-3.5 text-right whitespace-nowrap">

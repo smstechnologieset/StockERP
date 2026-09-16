@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -17,6 +18,7 @@ import {
   ArrowLeftRight,
   Tag,
   UserCog,
+  Loader2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
@@ -49,7 +51,6 @@ export function Sidebar({
     { name: t("nav_pos"), href: "/sales/new", icon: ShoppingCart },
     { name: t("nav_receive_stock"), href: "/purchases/new", icon: PackagePlus },
     { name: t("nav_inventory"), href: "/inventory", icon: Boxes },
-    { name: t("nav_credit"), href: "/credit", icon: CreditCard },
   ];
 
   const managerNavItems = [
@@ -67,11 +68,19 @@ export function Sidebar({
   ];
 
   const navItems = isManager ? managerNavItems : staffNavItems;
+  const [isSigningOut, setIsSigningOut] = useState(false);
 
   async function handleSignOut() {
-    await supabase.auth.signOut();
-    router.push("/login");
-    router.refresh();
+    if (isSigningOut) return;
+    setIsSigningOut(true);
+    try {
+      await supabase.auth.signOut();
+      router.push("/login");
+      router.refresh();
+    } catch (err) {
+      console.error("Sign out error:", err);
+      setIsSigningOut(false);
+    }
   }
 
   return (
@@ -148,13 +157,37 @@ export function Sidebar({
           </div>
           <button
             onClick={handleSignOut}
+            disabled={isSigningOut}
             title={t("nav_sign_out")}
-            className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:bg-red-50 hover:text-red-600 transition-colors"
+            className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:bg-red-50 hover:text-red-600 transition-colors disabled:opacity-50"
           >
-            <LogOut className="h-4 w-4" />
+            {isSigningOut ? (
+              <Loader2 className="h-4 w-4 animate-spin text-red-600" />
+            ) : (
+              <LogOut className="h-4 w-4" />
+            )}
           </button>
         </div>
       </div>
+
+      {/* Full-screen logout overlay to prevent repeated clicks & lagging */}
+      {isSigningOut && (
+        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-background/80 backdrop-blur-md animate-in fade-in duration-200">
+          <div className="relative flex items-center justify-center mb-4">
+            <div className="absolute h-16 w-16 rounded-full bg-red-500/20 animate-ping opacity-60" />
+            <div className="h-14 w-14 rounded-2xl bg-gradient-to-tr from-red-600 to-amber-600 flex items-center justify-center text-white shadow-xl shadow-red-500/30">
+              <LogOut className="h-7 w-7" />
+            </div>
+          </div>
+          <div className="flex items-center gap-2 text-foreground font-semibold text-base mb-1">
+            <Loader2 className="h-4 w-4 animate-spin text-amber-600" />
+            <span>{isAmharic ? "ከመለያዎ በመውጣት ላይ..." : "Signing out..."}</span>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            {isAmharic ? "እባክዎ ትንሽ ይጠብቁ..." : "Please wait a moment..."}
+          </p>
+        </div>
+      )}
     </aside>
   );
 }

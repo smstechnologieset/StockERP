@@ -54,3 +54,11 @@ export function formatQuantity(qty: number | null | undefined, symbol: string = 
   }).format(qty);
   return symbol ? `${formatted} ${symbol}` : formatted;
 }
+
+export {
+  formatEthiopianDate,
+  formatEthiopianDateTime,
+  toEthiopianDate,
+  getEthiopianToday,
+  ETHIOPIAN_MONTHS,
+} from "./ethiopianDate";

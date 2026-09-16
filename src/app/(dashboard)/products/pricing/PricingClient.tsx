@@ -377,6 +377,45 @@ export function PricingClient({ initialProducts, initialSearch = "" }: PricingCl
           </div>
         </CardContent>
       </Card>
+
+      {/* Bottom Status Notifications */}
+      {successNotice && (
+        <div className="p-3 text-xs bg-emerald-500/10 border border-emerald-500/30 text-emerald-800 dark:text-emerald-300 rounded-lg flex items-center gap-2 animate-in fade-in slide-in-from-bottom-2">
+          <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
+          <span>{successNotice}</span>
+        </div>
+      )}
+
+      {errorNotice && (
+        <div className="p-3 text-xs bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400 rounded-lg flex items-center gap-2 animate-in fade-in slide-in-from-bottom-2">
+          <AlertTriangle className="h-4 w-4 text-red-600 shrink-0" />
+          <span>{errorNotice}</span>
+        </div>
+      )}
+
+      {/* Bottom Save Bar when dirty items exist */}
+      {dirtyCount > 0 && (
+        <div className="flex justify-between items-center p-3 rounded-lg border bg-amber-500/10 border-amber-500/30">
+          <span className="text-xs font-medium text-amber-900 dark:text-amber-300">
+            {isAmharic
+              ? `${dirtyCount} ያልተቀመጡ የዋጋ ለውጦች አሉ`
+              : `${dirtyCount} unsaved price modifications`}
+          </span>
+          <Button
+            size="sm"
+            onClick={handleSaveAll}
+            disabled={savingAll}
+            className="bg-amber-600 hover:bg-amber-700 text-white shadow-sm text-xs gap-1.5"
+          >
+            {savingAll ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <Save className="h-3.5 w-3.5" />
+            )}
+            {t("btn_update_prices")} ({dirtyCount})
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

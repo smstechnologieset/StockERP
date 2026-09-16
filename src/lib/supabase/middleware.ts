@@ -59,6 +59,7 @@ export async function updateSession(request: NextRequest) {
   // If user is staff but trying to access manager-only routes, redirect to staff
   const isManagerOnlyRoute =
     url.pathname.startsWith("/manager") ||
+    url.pathname.startsWith("/credit") ||
     url.pathname.startsWith("/products") ||
     url.pathname.startsWith("/suppliers") ||
     url.pathname.startsWith("/reports") ||

@@ -49,18 +49,11 @@ export function ManagerDashboardClient({
   totalSalesCount,
   recentActivities,
 }: ManagerDashboardClientProps) {
-  const { t, isAmharic } = useLanguage();
+  const { t, formatEthDateTime, isAmharic } = useLanguage();
 
   const formatTimestamp = (ts: string) => {
     try {
-      const d = new Date(ts);
-      if (isNaN(d.getTime())) return ts;
-      return d.toLocaleString(isAmharic ? "am-ET" : "en-US", {
-        month: "short",
-        day: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-      });
+      return formatEthDateTime(ts);
     } catch {
       return ts;
     }
