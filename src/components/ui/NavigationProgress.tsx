@@ -61,10 +61,12 @@ export function NavigationProgress() {
         <div className="h-full bg-gradient-to-r from-amber-500 via-amber-400 to-amber-600 animate-pulse w-full shadow-[0_0_10px_rgba(245,158,11,0.7)]" />
       </div>
 
-      {/* Subtle indicator pill at top right */}
-      <div className="fixed top-3 right-5 z-50 flex items-center gap-2 rounded-full bg-card/95 px-3 py-1.5 text-xs font-medium text-foreground shadow-lg border border-amber-500/30 backdrop-blur pointer-events-none animate-in fade-in zoom-in-95 duration-150">
-        <Loader2 className="h-3.5 w-3.5 animate-spin text-amber-600" />
-        <span>በመሸጋገር ላይ... / Loading page...</span>
+      {/* Prominent centered indicator in the center of the screen */}
+      <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none animate-in fade-in duration-150">
+        <div className="flex items-center gap-3 rounded-2xl bg-card/95 px-6 py-3.5 text-sm font-semibold text-foreground shadow-2xl border border-amber-500/40 backdrop-blur-md animate-in zoom-in-95 duration-150">
+          <Loader2 className="h-4 w-4 animate-spin text-amber-600" />
+          <span>በመሸጋገር ላይ... / Loading page...</span>
+        </div>
       </div>
     </>
   );
