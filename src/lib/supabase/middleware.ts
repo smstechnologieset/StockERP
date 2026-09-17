@@ -33,7 +33,10 @@ export async function updateSession(request: NextRequest) {
   const url = request.nextUrl.clone();
 
   // If user is accessing protected routes without session, redirect to login
-  const isAuthRoute = url.pathname.startsWith("/login");
+  const isAuthRoute =
+    url.pathname.startsWith("/login") ||
+    url.pathname.startsWith("/forgot-password") ||
+    url.pathname.startsWith("/reset-password");
 
   if (!user && !isAuthRoute) {
     url.pathname = "/login";

@@ -42,93 +42,9 @@ export default async function InventoryPage({
     units = STANDARD_UNITS;
   }
 
-  // Fallback demo data if empty
-  const displayInventory: ProductCurrentStockView[] = inventory.length > 0 ? inventory : [
-    {
-      product_id: "p-1",
-      product_name: "Berbere Special Grade 1",
-      product_code: "BER-001",
-      product_category: "Powders & Spices",
-      default_unit_id: "2",
-      default_unit_name: "Kilogram",
-      default_unit_symbol: "kg",
-      default_unit_factor: 1000,
-      reorder_threshold_base_units: 10000,
-      cost_price_per_base_unit: 0.65,
-      selling_price_per_base_unit: 0.90,
-      is_active: true,
-      branch_id: "00000000-0000-0000-0000-000000000001",
-      branch_name: "Main Branch",
-      current_stock_base_units: 154000,
-      current_stock_default_unit: 154,
-      is_low_stock: false,
-      current_valuation_etb: 100100,
-    },
-    {
-      product_id: "p-2",
-      product_name: "Sinde (Wheat Grain)",
-      product_code: "WHT-001",
-      product_category: "Whole Grains",
-      default_unit_id: "3",
-      default_unit_name: "Quintal (Kuntal)",
-      default_unit_symbol: "q",
-      default_unit_factor: 100000,
-      reorder_threshold_base_units: 200000,
-      cost_price_per_base_unit: 0.048,
-      selling_price_per_base_unit: 0.065,
-      is_active: true,
-      branch_id: "00000000-0000-0000-0000-000000000001",
-      branch_name: "Main Branch",
-      current_stock_base_units: 180000,
-      current_stock_default_unit: 1.8,
-      is_low_stock: true,
-      current_valuation_etb: 8640,
-    },
-    {
-      product_id: "p-3",
-      product_name: "Ater (Split Yellow Peas)",
-      product_code: "ATR-001",
-      product_category: "Pulses / Legumes",
-      default_unit_id: "2",
-      default_unit_name: "Kilogram",
-      default_unit_symbol: "kg",
-      default_unit_factor: 1000,
-      reorder_threshold_base_units: 15000,
-      cost_price_per_base_unit: 0.12,
-      selling_price_per_base_unit: 0.16,
-      is_active: true,
-      branch_id: "00000000-0000-0000-0000-000000000001",
-      branch_name: "Main Branch",
-      current_stock_base_units: 42000,
-      current_stock_default_unit: 42,
-      is_low_stock: false,
-      current_valuation_etb: 5040,
-    },
-    {
-      product_id: "p-4",
-      product_name: "Barley / Gebs",
-      product_code: "BAR-001",
-      product_category: "Whole Grains",
-      default_unit_id: "3",
-      default_unit_name: "Quintal (Kuntal)",
-      default_unit_symbol: "q",
-      default_unit_factor: 100000,
-      reorder_threshold_base_units: 150000,
-      cost_price_per_base_unit: 0.042,
-      selling_price_per_base_unit: 0.058,
-      is_active: true,
-      branch_id: "00000000-0000-0000-0000-000000000001",
-      branch_name: "Main Branch",
-      current_stock_base_units: 120000,
-      current_stock_default_unit: 1.2,
-      is_low_stock: true,
-      current_valuation_etb: 5040,
-    },
-  ];
-
   return (
     <InventoryClient
-      initialInventory={displayInventory}
+      initialInventory={inventory}
       units={mergeWithStandardUnits(units)}
       initialFilter={searchParams.filter}
     />

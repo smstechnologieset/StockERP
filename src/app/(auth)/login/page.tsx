@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { Wheat, ArrowRight, AlertCircle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -109,6 +110,12 @@ export default function LoginPage() {
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
                 <Label htmlFor="password">{t("login_password")}</Label>
+                <Link
+                  href="/forgot-password"
+                  className="text-xs text-amber-700 dark:text-amber-400 hover:underline"
+                >
+                  {t("forgot_password_link")}
+                </Link>
               </div>
               <Input
                 id="password"

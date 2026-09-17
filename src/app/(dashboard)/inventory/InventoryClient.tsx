@@ -267,7 +267,19 @@ export function InventoryClient({
                 </tr>
               </thead>
               <tbody className="divide-y">
-                {filteredItems.map((item) => (
+                {filteredItems.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="px-5 py-12 text-center text-muted-foreground">
+                      <Boxes className="h-10 w-10 mx-auto text-muted-foreground/40 mb-2" />
+                      <p className="text-sm font-medium">
+                        {isAmharic
+                          ? "በክምችት ውስጥ ምንም እቃ አልተገኘም። እቃዎችን ለመጨመር 'የተገዛ እቃ መረከቢያ' (Stock In) የሚለውን ይጠቀሙ።"
+                          : "No commodities in inventory ledger yet. Click 'Stock In' to receive your first stock delivery."}
+                      </p>
+                    </td>
+                  </tr>
+                ) : (
+                  filteredItems.map((item) => (
                   <tr key={item.product_id} className="hover:bg-muted/30 transition-colors">
                     <td className="px-5 py-3.5">
                       <div className="font-semibold text-foreground text-sm">{item.product_name}</div>
@@ -320,7 +332,7 @@ export function InventoryClient({
                       </div>
                     </td>
                   </tr>
-                ))}
+                )))}
               </tbody>
             </table>
           </div>

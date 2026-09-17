@@ -62,68 +62,16 @@ export default async function ManagerDashboardPage() {
     console.error("Manager dashboard data fetch error:", error);
   }
 
-  // Fallback demo metrics if database has not yet been populated
-  const displayItems = stockData.length > 0 ? stockData : [
-    {
-      product_id: "demo-1",
-      product_name: "Berbere Special Grade 1",
-      product_category: "Powders & Spices",
-      default_unit_symbol: "kg",
-      default_unit_factor: 1000,
-      current_stock_base_units: 45000,
-      current_stock_default_unit: 45,
-      cost_price_per_base_unit: 0.65,
-      current_valuation_etb: 29250.0,
-      is_low_stock: false,
-    },
-    {
-      product_id: "demo-2",
-      product_name: "Sinde (Wheat Grain)",
-      product_category: "Whole Grains",
-      default_unit_symbol: "q",
-      default_unit_factor: 100000,
-      current_stock_base_units: 800000,
-      current_stock_default_unit: 8,
-      cost_price_per_base_unit: 0.048,
-      current_valuation_etb: 38400.0,
-      is_low_stock: false,
-    },
-    {
-      product_id: "demo-3",
-      product_name: "Ater (Split Yellow Peas)",
-      product_category: "Pulses / Legumes",
-      default_unit_symbol: "kg",
-      default_unit_factor: 1000,
-      current_stock_base_units: 8500,
-      current_stock_default_unit: 8.5,
-      cost_price_per_base_unit: 0.12,
-      current_valuation_etb: 1020.0,
-      is_low_stock: true,
-    },
-    {
-      product_id: "demo-4",
-      product_name: "Barley / Gebs",
-      product_category: "Whole Grains",
-      default_unit_symbol: "q",
-      default_unit_factor: 100000,
-      current_stock_base_units: 1200000,
-      current_stock_default_unit: 12,
-      cost_price_per_base_unit: 0.042,
-      current_valuation_etb: 50400.0,
-      is_low_stock: false,
-    },
-  ];
+  // Display real database metrics only (0 if empty)
+  const displayItems = stockData;
+  const valuation = totalValuation;
+  const lowStockList = lowStockItems;
 
-  const valuation = totalValuation > 0 ? totalValuation : 119070.0;
-  const lowStockList = lowStockItems.length > 0 ? lowStockItems : displayItems.filter(i => i.is_low_stock);
+  // Total sales calculation from database
+  const totalSalesRevenue = salesData.reduce((acc, s) => acc + (Number(s.total_amount) || 0), 0);
+  const totalSalesCount = salesData.length;
 
-  // Total sales calculation
-  const totalSalesRevenue = salesData.length > 0
-    ? salesData.reduce((acc, s) => acc + (Number(s.total_amount) || 0), 0)
-    : 154800.0;
-  const totalSalesCount = salesData.length > 0 ? salesData.length : 34;
-
-  // Compile unified recent activities list
+  // Compile unified recent activities list from real database events
   const realActivities: DashboardActivity[] = [];
 
   salesData.slice(0, 10).forEach((s) => {
@@ -169,68 +117,7 @@ export default async function ManagerDashboardPage() {
   // Sort activities by timestamp descending
   realActivities.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 
-  // Fallback demo activities if no activities exist yet
-  const fallbackActivities: DashboardActivity[] = [
-    {
-      id: "act-1",
-      type: "sale",
-      title: "Invoice #INV-2026-0042",
-      description: "Customer: Abebe Kebede",
-      amount: 14500.0,
-      paymentMethod: "cash",
-      timestamp: new Date(Date.now() - 25 * 60 * 1000).toISOString(),
-      link: "/sales",
-    },
-    {
-      id: "act-2",
-      type: "purchase",
-      title: "Stock In: WB-8812",
-      description: "Supplier: Arsi Bale Farmers Grain Cooperative",
-      amount: 48000.0,
-      timestamp: new Date(Date.now() - 3 * 3600 * 1000).toISOString(),
-      link: "/purchases",
-    },
-    {
-      id: "act-3",
-      type: "sale",
-      title: "Invoice #INV-2026-0041",
-      description: "Customer: Almaz Worku (Credit Sale)",
-      amount: 8200.0,
-      paymentMethod: "credit",
-      timestamp: new Date(Date.now() - 6 * 3600 * 1000).toISOString(),
-      link: "/sales",
-    },
-    {
-      id: "act-4",
-      type: "adjustment",
-      title: "Stock Adjustment: Sinde (Wheat Grain)",
-      description: "Physical audit reconciliation (+5 kg)",
-      quantity: "+5 kg",
-      timestamp: new Date(Date.now() - 14 * 3600 * 1000).toISOString(),
-      link: "/inventory/movements",
-    },
-    {
-      id: "act-5",
-      type: "sale",
-      title: "Invoice #INV-2026-0040",
-      description: "Customer: Walk-in Customer (Telebirr)",
-      amount: 3600.0,
-      paymentMethod: "telebirr",
-      timestamp: new Date(Date.now() - 26 * 3600 * 1000).toISOString(),
-      link: "/sales",
-    },
-    {
-      id: "act-6",
-      type: "purchase",
-      title: "Stock In: RC-4019",
-      description: "Supplier: Shewa Oil & Grain Wholesalers",
-      amount: 32000.0,
-      timestamp: new Date(Date.now() - 48 * 3600 * 1000).toISOString(),
-      link: "/purchases",
-    },
-  ];
-
-  const recentActivities = realActivities.length > 0 ? realActivities.slice(0, 10) : fallbackActivities;
+  const recentActivities = realActivities.slice(0, 10);
 
   return (
     <ManagerDashboardClient

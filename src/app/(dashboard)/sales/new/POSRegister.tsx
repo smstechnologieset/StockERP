@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import {
   ShoppingCart,
   Plus,
@@ -323,7 +324,21 @@ export function POSRegister({ products, units: propUnits, stockView, isManager =
 
           {/* Product Cards Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[600px] overflow-y-auto pr-1">
-            {filteredProducts.map((p) => {
+            {filteredProducts.length === 0 ? (
+              <div className="col-span-full p-12 text-center bg-muted/20 border border-dashed rounded-xl">
+                <p className="text-sm font-medium text-muted-foreground">
+                  {language === "am"
+                    ? "ምንም የተመዘገበ ምርት አልተገኘም። እባክዎ በመጀመሪያ ካታሎግ ውስጥ እቃዎችን ይመዝግቡ።"
+                    : "No commodities found in catalog yet. Please add products in the Product Catalog first."}
+                </p>
+                <Link href="/products" className="inline-block mt-3">
+                  <Button size="sm" variant="outline" className="text-xs">
+                    {language === "am" ? "ወደ እቃዎች ካታሎግ ሂድ" : "Go to Product Catalog"}
+                  </Button>
+                </Link>
+              </div>
+            ) : (
+              filteredProducts.map((p) => {
               const stockGrams = stockMap.get(p.id) || 0;
               const defaultUnit =
                 units.find((u) => u.id === p.default_unit_id) ||
@@ -380,7 +395,7 @@ export function POSRegister({ products, units: propUnits, stockView, isManager =
                   </CardContent>
                 </Card>
               );
-            })}
+            }))}
           </div>
         </div>
 

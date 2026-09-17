@@ -698,7 +698,6 @@ BEGIN
         raw_user_meta_data = '{"full_name":"Cashier / Sales Staff","role":"staff"}'::jsonb,
         email_confirmed_at = now();
 
-       -- Insert/Update Staff in public.profiles
     INSERT INTO public.profiles (id, full_name, role, branch_id)
     VALUES (
         v_staff_id,
