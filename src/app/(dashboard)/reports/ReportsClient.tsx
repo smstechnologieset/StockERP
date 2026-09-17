@@ -494,7 +494,7 @@ export function ReportsClient({
           </div>
 
           {/* KPI Cards Grid */}
-          <div className="grid grid-cols-4 gap-3 border p-3 bg-gray-50 rounded">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 border p-3 bg-gray-50 rounded">
             <div className="border-r pr-2">
               <div className="text-[11px] text-gray-600 font-semibold uppercase">{t("reports_sales_rev")}</div>
               <div className="text-lg font-bold text-black">{formatETB(totalRevenue)}</div>

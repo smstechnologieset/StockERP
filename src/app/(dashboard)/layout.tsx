@@ -1,6 +1,5 @@
 import { Suspense } from "react";
-import { Sidebar } from "@/components/navigation/Sidebar";
-import { Navbar } from "@/components/navigation/Navbar";
+import { DashboardShell } from "@/components/navigation/DashboardShell";
 import { NavigationProgress } from "@/components/ui/NavigationProgress";
 import { createClient } from "@/lib/supabase/server";
 
@@ -39,7 +38,6 @@ export default async function DashboardLayout({
         userName = user.email.split("@")[0];
       }
 
-      // Check low stock count from view
       const { count } = await supabase
         .from("view_product_current_stock")
         .select("*", { count: "exact", head: true })
@@ -52,31 +50,19 @@ export default async function DashboardLayout({
   }
 
   return (
-    <div className="flex min-h-screen bg-background text-foreground print:bg-white print:text-black">
-      {/* Navigation Progress bar on route changes */}
+    <>
       <Suspense fallback={null}>
         <NavigationProgress />
       </Suspense>
-
-      {/* Sidebar navigation */}
-      <div className="print:hidden">
-        <Sidebar
-          userRole={userRole}
-          userName={userName}
-          userEmail={userEmail}
-          branchName={branchName}
-        />
-      </div>
-
-      {/* Main Content Area */}
-      <div className="flex flex-1 flex-col pl-64 transition-all print:pl-0">
-        <div className="print:hidden">
-          <Navbar userRole={userRole} lowStockCount={lowStockCount} />
-        </div>
-        <main className="flex-1 p-6 md:p-8 max-w-7xl w-full mx-auto print:p-0 print:m-0 print:max-w-none">
-          {children}
-        </main>
-      </div>
-    </div>
+      <DashboardShell
+        userRole={userRole}
+        userName={userName}
+        userEmail={userEmail}
+        branchName={branchName}
+        lowStockCount={lowStockCount}
+      >
+        {children}
+      </DashboardShell>
+    </>
   );
 }
