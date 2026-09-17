@@ -1,11 +1,13 @@
 -- ==============================================================================
 -- StockERP - ADD NEW MANAGER ACCOUNT
 -- ==============================================================================
--- Use this script whenever you need to create a new manager login.
--- Steps:
---   1. Edit the four variables at the top (email, password, full_name, new_user_id)
---   2. Open Supabase Dashboard → SQL Editor → New query
---   3. Paste and Run (Ctrl + Enter)
+-- ⚠️  RECOMMENDED METHOD (avoids GoTrue errors):
+--      Use Supabase Dashboard → Authentication → Users → "Add user"
+--      → "Create new user" → tick "Auto confirm user" → Create.
+--      Then run the Step 3 SQL below to set their manager role.
+--
+-- ALTERNATIVE (SQL-only, use if Dashboard is unavailable):
+--      Edit the variables below and run in Supabase SQL Editor.
 -- ==============================================================================
 
 DO $$
@@ -49,7 +51,7 @@ BEGIN
         'authenticated',
         v_email,
         crypt(v_password, gen_salt('bf')),
-        now(),                          -- email pre-confirmed so they can log in immediately
+        now(),                          -- email pre-confirmed (confirmed_at is auto-generated)
         '{"provider":"email","providers":["email"]}'::jsonb,
         json_build_object('full_name', v_full_name, 'role', 'owner_manager')::jsonb,
         now(),
