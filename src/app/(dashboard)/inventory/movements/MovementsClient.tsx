@@ -58,11 +58,20 @@ export function MovementsClient({ initialMovements, error }: MovementsClientProp
       }
     });
 
+    const inboundKg = Number((inboundGrams / 1000).toFixed(2));
+    const outboundKg = Number((outboundGrams / 1000).toFixed(2));
+    const inboundQtl = Number((inboundKg / 100).toFixed(2));
+    const outboundQtl = Number((outboundKg / 100).toFixed(2));
+
     return {
       inboundCount,
       outboundCount,
       inboundGrams,
       outboundGrams,
+      inboundKg,
+      outboundKg,
+      inboundQtl,
+      outboundQtl,
     };
   }, [initialMovements]);
 
@@ -290,10 +299,15 @@ export function MovementsClient({ initialMovements, error }: MovementsClientProp
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-foreground">
-              {metrics.inboundGrams > 0 ? metrics.inboundGrams.toLocaleString() : 0} {isAmharic ? "አሃዶች" : "Units"}
+              {metrics.inboundKg > 0
+                ? metrics.inboundKg.toLocaleString(undefined, { maximumFractionDigits: 2 })
+                : 0}{" "}
+              <span className="text-base font-semibold text-muted-foreground">kg</span>
             </div>
             <p className="text-xs text-muted-foreground mt-1">
-              {isAmharic ? "በተመዘገቡ መለኪያዎች" : "In registered units"}
+              {metrics.inboundQtl >= 1
+                ? `${metrics.inboundQtl.toLocaleString(undefined, { maximumFractionDigits: 2 })} ${isAmharic ? "ኩንታል (Qtl)" : "Quintals (Qtl)"}`
+                : isAmharic ? "በኪሎግራም" : "In kilograms"}
             </p>
           </CardContent>
         </Card>
@@ -323,10 +337,15 @@ export function MovementsClient({ initialMovements, error }: MovementsClientProp
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-foreground">
-              {metrics.outboundGrams > 0 ? metrics.outboundGrams.toLocaleString() : 0} {isAmharic ? "አሃዶች" : "Units"}
+              {metrics.outboundKg > 0
+                ? metrics.outboundKg.toLocaleString(undefined, { maximumFractionDigits: 2 })
+                : 0}{" "}
+              <span className="text-base font-semibold text-muted-foreground">kg</span>
             </div>
             <p className="text-xs text-muted-foreground mt-1">
-              {isAmharic ? "በተመዘገቡ መለኪያዎች" : "In registered units"}
+              {metrics.outboundQtl >= 1
+                ? `${metrics.outboundQtl.toLocaleString(undefined, { maximumFractionDigits: 2 })} ${isAmharic ? "ኩንታል (Qtl)" : "Quintals (Qtl)"}`
+                : isAmharic ? "በኪሎግራም" : "In kilograms"}
             </p>
           </CardContent>
         </Card>
@@ -552,14 +571,16 @@ export function MovementsClient({ initialMovements, error }: MovementsClientProp
                         )}
                       </td>
 
-                      {/* Quantity in Unit and Grams */}
+                      {/* Quantity in Unit and Grams/Kg */}
                       <td className="px-5 py-3.5 text-right font-bold text-sm">
                         <span className={isInbound ? "text-emerald-700 dark:text-emerald-400" : "text-red-600 dark:text-red-400"}>
                           {isInbound ? "+" : "-"}
                           {formatQuantity(Math.abs(m.original_quantity), m.unit?.symbol || "")}
                         </span>
                         <div className="text-[10px] text-muted-foreground font-normal">
-                          ({formatQuantity(Math.abs(g), "g")})
+                          {Math.abs(g) >= 1000
+                            ? `(${(Math.abs(g) / 1000).toLocaleString(undefined, { maximumFractionDigits: 2 })} kg)`
+                            : `(${formatQuantity(Math.abs(g), "g")})`}
                         </div>
                       </td>
 
