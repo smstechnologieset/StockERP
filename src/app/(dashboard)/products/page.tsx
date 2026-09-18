@@ -1,12 +1,13 @@
 import { createClient } from "@/lib/supabase/server";
 import { ProductsClient } from "./ProductsClient";
-import type { Product, Unit } from "@/types/database";
+import type { Unit } from "@/types/database";
+import type { ProductWithStock } from "@/components/products/ProductFormModal";
 import { STANDARD_UNITS } from "@/lib/constants/units";
 
 export const revalidate = 0;
 
 export default async function ProductsPage() {
-  let products: (Product & { default_unit?: Unit })[] = [];
+  let products: ProductWithStock[] = [];
   let units: Unit[] = [];
   let isManager = true; // Default fallback to manager for MVP development
 
@@ -46,8 +47,36 @@ export default async function ProductsPage() {
       .select("*, default_unit:units(*)")
       .order("name", { ascending: true });
 
+    // Fetch live stock
+    const { data: stockData } = await supabase
+      .from("view_product_current_stock")
+      .select("product_id, current_stock_default_unit, current_stock_base_units, is_low_stock");
+
+    const stockMap = new Map<
+      string,
+      { current_stock_default_unit: number; current_stock_base_units: number; is_low_stock: boolean }
+    >();
+
+    if (stockData) {
+      for (const s of stockData) {
+        stockMap.set(s.product_id, {
+          current_stock_default_unit: Number(s.current_stock_default_unit) || 0,
+          current_stock_base_units: Number(s.current_stock_base_units) || 0,
+          is_low_stock: Boolean(s.is_low_stock),
+        });
+      }
+    }
+
     if (productsData) {
-      products = productsData;
+      products = productsData.map((p) => {
+        const stock = stockMap.get(p.id);
+        return {
+          ...p,
+          current_stock_default_unit: stock?.current_stock_default_unit ?? 0,
+          current_stock_base_units: stock?.current_stock_base_units ?? 0,
+          is_low_stock: stock?.is_low_stock ?? false,
+        };
+      });
     }
   } catch (error) {
     console.error("Error fetching products:", error);

@@ -234,6 +234,15 @@ export const translations = {
     prod_delete_title: "Delete / Archive Product",
     prod_delete_desc: "Are you sure you want to remove this product?",
     prod_delete_audit_rule: "Audit Protection Rule: If this product already has historical sales invoices or inventory ledger movements, the system will safely archive it (hiding it from POS sales) rather than permanently deleting it. This protects your financial and inventory records.",
+    prod_stock_col: "Stock on Hand",
+    prod_initial_stock_label: "Initial Stock on Hand",
+    prod_initial_stock_hint: "Opening quantity in warehouse (e.g. 50 kg or 10 Quintal). Set to 0 if none.",
+    prod_current_stock_label: "Current Stock on Hand",
+    prod_edit_stock_label: "Update Stock Quantity",
+    prod_stock_delta: "Difference",
+    prod_stock_reason_label: "Adjustment Reason",
+    prod_stock_reason_placeholder: "e.g. Physical inventory recount, audit adjustment",
+    prod_stock_action_btn: "Adjust Stock",
 
     // Standard Units
     unit_kilogram: "Kilogram (kg)",
@@ -721,6 +730,15 @@ export const translations = {
     prod_delete_title: "ምርቱን ሰርዝ ወይም አቆይ",
     prod_delete_desc: "ይህን ምርት ለማስወገድ እርግጠኛ ነዎት?",
     prod_delete_audit_rule: "የደህንነት ህግ፡ ይህ ምርት ከዚህ በፊት የተመዘገበ ሽያጭ ወይም ክምችት ካለው፣ የቀድሞ መረጃዎች እንዳይበላሹ ስርዓቱ በደህንነት ያግደዋል (ከPOS ሽያጭ ይደበቃል) እንጂ አይሰርዘውም።",
+    prod_stock_col: "ያለ ክምችት",
+    prod_initial_stock_label: "መነሻ የክምችት መጠን",
+    prod_initial_stock_hint: "ምርቱ ሲመዘገብ መጋዘን ውስጥ ያለ የመጀመሪያ ክምችት (ምሳሌ፡ 50 ኪ.ግ ወይም 10 ኩንታል)። ከሌለ 0 ያድርጉት።",
+    prod_current_stock_label: "አሁን ያለ የክምችት መጠን",
+    prod_edit_stock_label: "የክምችት መጠን አስተካክል",
+    prod_stock_delta: "ልዩነት",
+    prod_stock_reason_label: "የማስተካከያ ምክንያት",
+    prod_stock_reason_placeholder: "ምሳሌ፡ የክምችት ቆጠራ ማስተካከያ፣ ምርመራ",
+    prod_stock_action_btn: "ክምችት አስተካክል",
 
     // Standard Units
     unit_kilogram: "ኪሎግራም (ኪ.ግ)",

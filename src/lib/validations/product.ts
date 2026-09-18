@@ -10,6 +10,9 @@ export const productSchema = z.object({
   cost_price_display: z.coerce.number().min(0, "Cost price cannot be negative"),
   selling_price_display: z.coerce.number().min(0, "Selling price cannot be negative"),
   reorder_threshold_display: z.coerce.number().min(0, "Reorder threshold cannot be negative"),
+  initial_stock_display: z.coerce.number().min(0, "Initial stock cannot be negative").optional().default(0),
+  current_stock_display: z.coerce.number().min(0, "Stock cannot be negative").optional(),
+  stock_adjustment_reason: z.string().optional(),
   is_active: z.boolean().default(true),
 });
 

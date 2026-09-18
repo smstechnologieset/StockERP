@@ -11,20 +11,26 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { createClient } from "@/lib/supabase/client";
 import { formatETB } from "@/lib/utils";
-import { Loader2, Calculator } from "lucide-react";
+import { Loader2, Calculator, Package } from "lucide-react";
 import type { Unit, Product } from "@/types/database";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
-
+import { saveProductWithStockAction } from "@/app/actions/products";
 import { mergeWithStandardUnits } from "@/lib/constants/units";
+
+export type ProductWithStock = Product & {
+  default_unit?: Unit;
+  current_stock_default_unit?: number;
+  current_stock_base_units?: number;
+  is_low_stock?: boolean;
+};
 
 interface ProductFormModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   units: Unit[];
-  productToEdit?: (Product & { default_unit?: Unit }) | null;
-  onSuccess: () => void;
+  productToEdit?: ProductWithStock | null;
+  onSuccess: (savedProduct: ProductWithStock, isNew: boolean) => void;
 }
 
 export function ProductFormModal({
@@ -37,12 +43,15 @@ export function ProductFormModal({
   const { t, tCategory, language } = useLanguage();
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const supabase = createClient();
 
   const availableUnits = mergeWithStandardUnits(units);
 
   const defaultUnit = availableUnits.find((u) => u.symbol === "kg") || availableUnits[0];
   const initialDefaultUnitId = productToEdit?.default_unit_id || defaultUnit?.id || "";
+
+  const currentRecordedStock = productToEdit?.current_stock_default_unit !== undefined
+    ? Number(productToEdit.current_stock_default_unit)
+    : 0;
 
   const {
     register,
@@ -61,6 +70,9 @@ export function ProductFormModal({
       cost_price_display: 0,
       selling_price_display: 0,
       reorder_threshold_display: 5,
+      initial_stock_display: 0,
+      current_stock_display: currentRecordedStock,
+      stock_adjustment_reason: "",
       is_active: true,
     },
   });
@@ -80,6 +92,9 @@ export function ProductFormModal({
         const reorderDisplay = factor === 1
           ? Number(productToEdit.reorder_threshold_base_units)
           : Number((Number(productToEdit.reorder_threshold_base_units) / factor).toFixed(2));
+        const recordedStock = productToEdit.current_stock_default_unit !== undefined
+          ? Number(productToEdit.current_stock_default_unit)
+          : 0;
 
         reset({
           name: productToEdit.name || "",
@@ -90,6 +105,9 @@ export function ProductFormModal({
           cost_price_display: isNaN(costDisplay) ? 0 : costDisplay,
           selling_price_display: isNaN(sellDisplay) ? 0 : sellDisplay,
           reorder_threshold_display: isNaN(reorderDisplay) ? 5 : reorderDisplay,
+          initial_stock_display: 0,
+          current_stock_display: recordedStock,
+          stock_adjustment_reason: "",
           is_active: productToEdit.is_active ?? true,
         });
       } else {
@@ -102,6 +120,9 @@ export function ProductFormModal({
           cost_price_display: 0,
           selling_price_display: 0,
           reorder_threshold_display: 5,
+          initial_stock_display: 0,
+          current_stock_display: 0,
+          stock_adjustment_reason: "",
           is_active: true,
         });
       }
@@ -112,7 +133,12 @@ export function ProductFormModal({
   const selectedUnitId = watch("default_unit_id");
   const costPriceDisplay = Number(watch("cost_price_display")) || 0;
   const sellingPriceDisplay = Number(watch("selling_price_display")) || 0;
-  const reorderDisplay = Number(watch("reorder_threshold_display")) || 0;
+  const currentStockFormVal = watch("current_stock_display");
+  const parsedTargetStock =
+    currentStockFormVal !== undefined && !isNaN(Number(currentStockFormVal))
+      ? Number(currentStockFormVal)
+      : currentRecordedStock;
+  const stockDelta = Number((parsedTargetStock - currentRecordedStock).toFixed(3));
 
   const currentUnit = availableUnits.find((u) => u.id === selectedUnitId) || defaultUnit;
 
@@ -131,7 +157,10 @@ export function ProductFormModal({
       const sellBase = factor === 1 ? data.selling_price_display : (factor > 0 ? data.selling_price_display / factor : 0);
       const reorderBase = factor === 1 ? data.reorder_threshold_display : (factor > 0 ? data.reorder_threshold_display * factor : 0);
 
-      const payload = {
+      const isNew = !productToEdit;
+
+      const res = await saveProductWithStockAction({
+        id: productToEdit?.id,
         name: data.name,
         code: data.code || null,
         category: data.category,
@@ -141,23 +170,19 @@ export function ProductFormModal({
         selling_price_per_base_unit: sellBase,
         reorder_threshold_base_units: reorderBase,
         is_active: data.is_active,
-      };
+        initial_stock: isNew ? Number(data.initial_stock_display) || 0 : undefined,
+        current_stock: !isNew ? currentRecordedStock : undefined,
+        target_stock: !isNew ? parsedTargetStock : undefined,
+        adjustment_reason: data.stock_adjustment_reason || undefined,
+      });
 
-      if (productToEdit) {
-        const { error } = await supabase
-          .from("products")
-          .update(payload)
-          .eq("id", productToEdit.id);
-
-        if (error) throw error;
-      } else {
-        const { error } = await supabase.from("products").insert(payload);
-        if (error) throw error;
+      if (!res.success || !res.product) {
+        throw new Error(res.error || "Failed to save product.");
       }
 
       onOpenChange(false);
       reset();
-      onSuccess();
+      onSuccess(res.product as ProductWithStock, isNew);
     } catch (err: any) {
       setErrorMessage(err.message || (language === "am" ? "ምርቱን ማስቀመጥ አልተቻለም።" : "Failed to save product."));
     } finally {
@@ -215,6 +240,105 @@ export function ProductFormModal({
               </Select>
             </div>
           </div>
+
+          {/* Initial Stock Input for New Product */}
+          {!productToEdit && (
+            <div className="p-3.5 bg-amber-500/5 rounded-lg border border-amber-500/25 space-y-2">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="initial_stock_display" className="text-xs font-semibold flex items-center gap-1.5 text-foreground">
+                  <Package className="h-4 w-4 text-amber-600" />
+                  {t("prod_initial_stock_label")} ({currentUnit?.name || currentUnit?.symbol})
+                </Label>
+                <span className="text-[11px] text-muted-foreground">
+                  {language === "am" ? "አማራጭ (ከሌለ 0 ያድርጉት)" : "Optional (0 if none)"}
+                </span>
+              </div>
+              <div className="relative">
+                <Input
+                  id="initial_stock_display"
+                  type="number"
+                  step="any"
+                  min="0"
+                  placeholder="0"
+                  onFocus={(e) => e.target.select()}
+                  {...register("initial_stock_display")}
+                  className="font-medium pr-14"
+                />
+                <div className="absolute right-3 top-2.5 text-xs font-semibold text-amber-700 dark:text-amber-400 pointer-events-none">
+                  {currentUnit?.symbol}
+                </div>
+              </div>
+              <p className="text-[11px] text-muted-foreground">
+                {t("prod_initial_stock_hint")}
+              </p>
+            </div>
+          )}
+
+          {/* Current Stock and Stock Adjustment for Existing Product */}
+          {productToEdit && (
+            <div className="p-3.5 bg-amber-500/5 rounded-lg border border-amber-500/25 space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5">
+                  <Package className="h-4 w-4 text-amber-600" />
+                  <span className="text-xs font-semibold text-foreground">
+                    {t("prod_current_stock_label")}
+                  </span>
+                </div>
+                <span className="text-xs font-bold text-foreground px-2.5 py-0.5 rounded bg-amber-100 dark:bg-amber-950/60 border border-amber-300 dark:border-amber-800">
+                  {currentRecordedStock} {currentUnit?.symbol}
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-0.5">
+                <div className="space-y-1">
+                  <Label htmlFor="current_stock_display" className="text-xs font-medium">
+                    {t("prod_edit_stock_label")} ({currentUnit?.symbol})
+                  </Label>
+                  <Input
+                    id="current_stock_display"
+                    type="number"
+                    step="any"
+                    min="0"
+                    onFocus={(e) => e.target.select()}
+                    {...register("current_stock_display")}
+                    className="font-medium"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <Label htmlFor="stock_adjustment_reason" className="text-xs font-medium">
+                    {t("prod_stock_reason_label")}
+                  </Label>
+                  <Input
+                    id="stock_adjustment_reason"
+                    placeholder={t("prod_stock_reason_placeholder")}
+                    {...register("stock_adjustment_reason")}
+                    className="text-xs"
+                  />
+                </div>
+              </div>
+
+              {Math.abs(stockDelta) > 0.0001 && (
+                <div
+                  className={`text-xs px-2.5 py-1.5 rounded-md font-medium flex items-center justify-between ${
+                    stockDelta > 0
+                      ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20"
+                      : "bg-amber-500/10 text-amber-800 dark:text-amber-300 border border-amber-500/20"
+                  }`}
+                >
+                  <span>
+                    {language === "am" ? "የሚደረግ ማስተካከያ፦" : "Stock Adjustment:"}{" "}
+                    <strong>{stockDelta > 0 ? `+${stockDelta}` : stockDelta} {currentUnit?.symbol}</strong>
+                  </span>
+                  <span className="text-[11px] font-normal">
+                    {stockDelta > 0
+                      ? (language === "am" ? "ወደ መጋዘን ይጨመራል" : "will be added to stock")
+                      : (language === "am" ? "ከመጋዘን ይቀነሳል" : "will be deducted from stock")}
+                  </span>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Pricing & Reorder Thresholds */}
           <div className="p-3.5 bg-muted/40 rounded-lg border space-y-3">

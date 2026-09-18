@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import {
   useReactTable,
   getCoreRowModel,
@@ -36,7 +36,7 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { ProductFormModal } from "@/components/products/ProductFormModal";
+import { ProductFormModal, type ProductWithStock } from "@/components/products/ProductFormModal";
 import { formatETB, formatQuantity } from "@/lib/utils";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 import { deleteProductAction, toggleProductStatusAction } from "@/app/actions/products";
@@ -45,12 +45,12 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 
 interface ProductsClientProps {
-  initialProducts: (Product & { default_unit?: Unit })[];
+  initialProducts: ProductWithStock[];
   units: Unit[];
   isManager: boolean;
 }
 
-const columnHelper = createColumnHelper<Product & { default_unit?: Unit }>();
+const columnHelper = createColumnHelper<ProductWithStock>();
 
 export function ProductsClient({
   initialProducts,
@@ -59,16 +59,21 @@ export function ProductsClient({
 }: ProductsClientProps) {
   const router = useRouter();
   const { t, tCategory, isAmharic, language } = useLanguage();
-  const [data, setData] = useState(initialProducts);
+  const [data, setData] = useState<ProductWithStock[]>(initialProducts);
   const [globalFilter, setGlobalFilter] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [statusFilter, setStatusFilter] = useState<"all" | "active" | "archived">("active");
   const [sorting, setSorting] = useState<SortingState>([]);
   const [modalOpen, setModalOpen] = useState(false);
-  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [editingProduct, setEditingProduct] = useState<ProductWithStock | null>(null);
   const [productToDelete, setProductToDelete] = useState<Product | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
+
+  // Sync state immediately when server revalidates initialProducts
+  useEffect(() => {
+    setData(initialProducts);
+  }, [initialProducts]);
 
   // Filter categories and status
   const filteredData = useMemo(() => {
@@ -159,6 +164,41 @@ export function ProductsClient({
             <div className="text-xs text-muted-foreground">
               <span className="font-medium text-foreground">{unit?.name || "Unit"}</span>{" "}
               ({unit?.symbol})
+            </div>
+          );
+        },
+      }),
+      columnHelper.accessor("current_stock_default_unit", {
+        header: t("prod_stock_col"),
+        cell: (info) => {
+          const product = info.row.original;
+          const stock = Number(info.getValue()) || 0;
+          const unitSymbol = product.default_unit?.symbol || "unit";
+          const isLow = Boolean(product.is_low_stock);
+          const isZero = stock <= 0;
+
+          return (
+            <div className="flex items-center gap-1.5">
+              <span
+                className={`font-semibold text-sm ${
+                  isZero
+                    ? "text-red-600 dark:text-red-400"
+                    : isLow
+                    ? "text-amber-600 dark:text-amber-400"
+                    : "text-foreground"
+                }`}
+              >
+                {formatQuantity(stock, unitSymbol)}
+              </span>
+              {isZero ? (
+                <span className="inline-flex items-center px-1.5 py-0.2 rounded text-[10px] font-semibold bg-red-100 dark:bg-red-950/60 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-900">
+                  {language === "am" ? "አልቋል" : "Out"}
+                </span>
+              ) : isLow ? (
+                <span className="inline-flex items-center px-1.5 py-0.2 rounded text-[10px] font-semibold bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-300 dark:border-amber-800">
+                  {language === "am" ? "አነስተኛ" : "Low"}
+                </span>
+              ) : null}
             </div>
           );
         },
@@ -522,7 +562,25 @@ export function ProductsClient({
         }}
         units={units}
         productToEdit={editingProduct}
-        onSuccess={() => {
+        onSuccess={(savedProduct, isNew) => {
+          if (isNew) {
+            setData((prev) => [savedProduct, ...prev.filter((p) => p.id !== savedProduct.id)]);
+            setNotice(
+              language === "am"
+                ? `ምርት "${savedProduct.name}" በተሳካ ሁኔታ ተመዝግቧል።`
+                : `Product "${savedProduct.name}" created successfully.`
+            );
+          } else {
+            setData((prev) =>
+              prev.map((p) => (p.id === savedProduct.id ? { ...p, ...savedProduct } : p))
+            );
+            setNotice(
+              language === "am"
+                ? `ምርት "${savedProduct.name}" ተሻሽሏል።`
+                : `Product "${savedProduct.name}" updated successfully.`
+            );
+          }
+          setTimeout(() => setNotice(null), 4500);
           router.refresh();
         }}
       />
