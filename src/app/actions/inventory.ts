@@ -53,7 +53,7 @@ export async function recordStockAdjustmentAction(input: StockAdjustmentInput) {
       quantity_base_units: signedGrams,
       original_quantity: input.quantity,
       unit_id: input.unit_id,
-      reference_type: "adjustment",
+      reference_type: "manual_adjustment",
       manual_override: true,
       override_reason: input.reason,
       notes: `Manual adjustment: ${input.reason}`,
@@ -66,6 +66,7 @@ export async function recordStockAdjustmentAction(input: StockAdjustmentInput) {
 
     revalidatePath("/inventory");
     revalidatePath("/inventory/movements");
+    revalidatePath("/products");
     revalidatePath("/manager");
     revalidatePath("/staff");
 
