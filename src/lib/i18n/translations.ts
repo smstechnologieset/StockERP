@@ -299,6 +299,9 @@ export const translations = {
     sup_phone_label: "Phone Number",
     sup_address_label: "Physical Address / Region",
     sup_notes_label: "Contract Notes / Grains Supplied",
+    sup_delete_title: "Delete / Archive Supplier",
+    sup_delete_desc: "Are you sure you want to remove this supplier account?",
+    sup_delete_audit_rule: "Audit Protection Rule: If this supplier has historical purchase shipments, the system will safely archive it rather than permanently deleting it. This protects your financial and procurement audit records.",
 
     // Payment & Credit
     pay_method: "Payment Method",
@@ -795,6 +798,9 @@ export const translations = {
     sup_phone_label: "ስልክ ቁጥር",
     sup_address_label: "አድራሻ / ክልል",
     sup_notes_label: "የስምምነት ማስታወሻ / የሚቀርቡ እህሎች",
+    sup_delete_title: "አቅራቢን ሰርዝ ወይም አቆይ",
+    sup_delete_desc: "ይህን አቅራቢ ለማስወገድ እርግጠኛ ነዎት?",
+    sup_delete_audit_rule: "የደህንነት ህግ፡ ይህ አቅራቢ ከዚህ በፊት የተረከቧቸው የግዢ ጭነቶች ካሉ፣ የቀድሞ የፋይናንስና የግዢ መረጃዎች እንዳይዛቡ ስርዓቱ በደህንነት ያግደዋል እንጂ አይሰርዘውም።",
 
     // Payment & Credit
     pay_method: "የክፍያ ዘዴ",
